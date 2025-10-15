@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Olivia Portal</title>
+
+  <link rel="shortcut icon" href="https://mag-sa.com/wp-content/themes/mag/dist/images/favicon.png" type="image/x-icon">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"> -->
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Global CSS -->
+  <!-- Google Font: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+  <!-- Page/Department Specific CSS -->
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'dashboard' %}">Olivia Portal</a>
+      <button class="btn btn-outline-light d-lg-none" type="button" data-bs-toggle="offcanvas"
+        data-bs-target="#offcanvasSidebar">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="d-none d-lg-flex ms-auto">
+        <a class="btn logout-btn" href="{% url 'logout' %}">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Layout -->
+  <div class="layout" style="margin-top:56px;">
+
+    <!-- Sidebar -->
+    <nav class="sidebar d-none d-lg-block">
+      <ul>
+        {% for dept in departments %}
+        <li>
+          <a class="nav-link {% if request.path == dept.url %}active{% endif %}" href="{{ dept.url }}">
+            <i class="{{ dept.icon }}"></i> {{ dept.name }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <!-- Mobile Sidebar -->
+    <div class="offcanvas offcanvas-start bg-dark text-white d-lg-none" tabindex="-1" id="offcanvasSidebar">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Departments</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+      </div>
+      <div class="offcanvas-body p-0">
+        <ul class="nav nav-pills flex-column">
+          {% for dept in departments %}
+          <li>
+            <a class="nav-link text-white {% if request.path == dept.url %}active{% endif %}" href="{{ dept.url }}">
+              <i class="{{ dept.icon }} me-2"></i> {{ dept.name }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

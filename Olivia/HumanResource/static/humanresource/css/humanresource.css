@@ -1,0 +1,195 @@
+/* ---------------- HR Petty Cash Card ---------------- */
+.hr-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px 24px;
+}
+
+.no-margin-hr {
+    margin: 0 !important;
+}
+
+.hr-card-header h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #0d6efd;
+    margin: 0;
+}
+
+.hr-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hr-card-actions .input-group {
+    min-width: 180px;
+    max-width: 250px;
+    width: 100%;
+}
+
+.hr-card-actions .input-group input {
+    padding: 6px 12px;
+}
+
+.hr-card-actions .input-group .btn {
+    padding: 2px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hr-card-actions .btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+/* ---------------- HR Tabs ---------------- */
+.hr-tabs {
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    flex-wrap: wrap;
+    /* allow wrapping on small screens */
+    gap: 0rem;
+    /* spacing between items */
+    padding-left: 0;
+    list-style: none;
+}
+
+.hr-tabs .nav-item {
+    text-align: center;
+    margin-bottom: 0.25rem;
+    /* spacing between rows */
+}
+
+.hr-tabs .nav-link {
+    color: #000 !important;
+    font-weight: 500;
+    font-size: 0.88rem;
+    border: none;
+    background: transparent;
+    padding: 0;
+    position: relative;
+    display: inline-block;
+    transition: color 0.3s ease;
+}
+
+.hr-tabs .nav-link:hover {
+    color: #555 !important;
+}
+
+/* Underline animation */
+.hr-tabs .nav-link span {
+    position: relative;
+    display: inline-block;
+}
+
+.hr-tabs .nav-link span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 100%;
+    height: 2px;
+    background-color: #000;
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.hr-tabs .nav-link.active span::after {
+    transform: scaleX(1);
+}
+
+/* ---------------- Petty Cash Table ---------------- */
+.hr-card-body table {
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.hr-card-body table th {
+    font-weight: 600;
+    background-color: #f1f3f5;
+}
+
+.hr-card-body table td .badge {
+    font-weight: 500;
+    padding: 0.35rem 0.75rem;
+}
+
+/* ---------------- Petty Cash Card Footer (Pagination) ---------------- */
+.hr-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 24px;
+}
+
+.hr-card-footer .form-select {
+    width: auto;
+}
+
+/* Highlight the latest petty cash entry (first row) */
+.new-entry {
+    background-color: #e6f7ff !important;
+    font-weight: 500;
+    transition: background-color 0.5s ease;
+    animation: highlightFade 2s ease;
+}
+
+/* Hover effect for table rows */
+.table-hover tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Attachment modal styling */
+#attachmentModal .modal-body {
+    padding: 1.5rem;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#attachmentModal img,
+#attachmentModal embed {
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal title styling */
+#attachmentModal .modal-title {
+    font-size: 1.25rem;
+    color: #333;
+}
+
+/* Smooth image or PDF load */
+#attachmentModal img,
+#attachmentModal embed {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+#attachmentModal img.loaded,
+#attachmentModal embed.loaded {
+    opacity: 1;
+}
+
+@keyframes highlightFade {
+    from {
+        background-color: #e6f7ff;
+    }
+
+    to {
+        background-color: transparent;
+    }
+}

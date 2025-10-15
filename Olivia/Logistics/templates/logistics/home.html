@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <!-- Clickable Header -->
+  <h3 class="fw-bold">
+    <a href="{% url 'logistics_home' %}" class="text-decoration-none text-dark">
+      Logistics
+    </a>
+  </h3>
+
+  <!-- Dynamic Tabs -->
+  <ul class="nav hr-tabs nav-fill mt-4">
+    {% for tab in tabs %}
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == tab.url_name %}active{% endif %}"
+        href="{% url 'logistics_tab' tab.url_name %}">
+        <span>{{ tab.name }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% block hr_content %}
+  <div class="mt-4">
+    <div class="card mt-3 shadow">
+      <div class="card-body">
+        <p>Welcome to the Logistic department!</p>
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<!-- <script src="{% static 'humanresource/js/humanresource.js' %}"></  script> -->
+{% endblock %}

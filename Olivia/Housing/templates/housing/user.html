@@ -1,0 +1,155 @@
+{% extends "housing/home.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
+{% endblock %}
+
+{% block hr_content %}
+
+
+
+
+<div class="card shadow-lg border-0 rounded-3 mt-4">
+
+  <!-- Card Header -->
+  <div class="card-header bg-white border-0 px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <h3 class="fw-semibold mb-0" style="font-family: 'Poppins', sans-serif;">
+        User Details
+      </h3>
+      <div class="search-box mx-3">
+        <input placeholder="Search..." id="search" class="form-control shadow-none" type="search">
+      </div>
+
+      <div class="btn-group btn-group-sm">
+        <!-- Create Button (Always enabled) -->
+        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#unitModal"
+          id="addNewUnitBtn">
+          <i class="bi bi-plus-circle me-1"></i> Create
+        </button>
+        <!-- Update Button: Uses btn-outline-primary -->
+        <button type="button" class="btn btn-sm btn-outline-primary" id="updateUnitBtn">
+          <i class="bi bi-pencil-square me-1"></i> Update
+        </button>
+        <!-- Delete Button: Uses btn-outline-danger & triggers the modal via data-bs-target -->
+        <button type="button" class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
+          <i class="bi bi-trash me-1"></i> Delete
+        </button>
+        <!-- View Button -->
+        <button id="viewBtn" class="btn btn-sm btn-outline-dark">
+          <i class="bi bi-eye me-1"></i> View
+        </button>
+        <!-- Export Button -->
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="exportBtn">
+          <i class="bi bi-download me-1"></i> Export
+        </button>
+      </div>
+
+    </div>
+  </div>
+  <hr class="no-margin-hr">
+
+  <!-- Table -->
+  <div class="card-body px-4 py-3">
+    <div class="table-responsive">
+      <table id="cashTable" class="table table-sm align-middle table-hover mb-0"
+        style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+        <thead class="table-light text-muted">
+          <tr>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>UserName</th>
+            <th>Group</th>
+            <th>Company</th>
+            <th>Government_ID</th>
+            <th>ID_Type</th>
+            <th>NEOM_ID</th>
+            <th>D.O.B</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Nationality</th>
+            <th>Religion</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="unitsTableBody">
+          {% for unit in units %}
+          <tr data-id="{{ unit.id }}">
+            <td><input type="checkbox" class="select-entry" value="{{ unit.id }}"></td>
+            <td>{{ unit.unit_number }}</td>
+            <td>{{ unit.bed_number }}</td>
+            <td>{{ unit.unit_location }}</td>
+            <td>{{ unit.zone }}</td>
+            <td>{{ unit.accomodation_type }}</td>
+            <td>{{ unit.separable }}</td>
+            <td>{{ unit.wave }}</td>
+            <td>{{ unit.area }}</td>
+            <td>{{ unit.block }}</td>
+            <td>{{ unit.building }}</td>
+            <td>{{ unit.floor }}</td>
+            <td>{{ unit.occupancy_status }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="13" class="text-center text-muted">No unit records found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+
+  <!-- Card Footer -->
+  <div class="card-footer bg-white border-0 rounded-3 py-3 px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <!-- Entries info -->
+      <div class="d-flex align-items-center small text-muted">
+        <span class="me-3">
+          {% if units_page %}
+          Showing {{ units_page.start_index }} to {{ units_page.end_index }} of {{ units_page.paginator.count }} entries
+          {% else %}
+          No entries
+          {% endif %}
+        </span>
+      </div>
+
+      <!-- Pagination buttons -->
+      <div class="d-flex gap-2">
+        {% if units and units.has_previous %}
+        <a href="?page={{ units.previous_page_number }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-chevron-left"></i> Previous
+        </a>
+        {% else %}
+        <button class="btn btn-outline-secondary btn-sm" disabled>
+          <i class="bi bi-chevron-left"></i> Previous
+        </button>
+        {% endif %}
+
+        {% if units and units.has_next %}
+        <a href="?page={{ units.next_page_number }}" class="btn btn-outline-secondary btn-sm">
+          Next <i class="bi bi-chevron-right"></i>
+        </a>
+        {% else %}
+        <button class="btn btn-outline-secondary btn-sm" disabled>
+          Next <i class="bi bi-chevron-right"></i>
+        </button>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Include Modal -->
+  {% include 'housing/include/modals/unit_modal.html' %}
+  {% include 'housing/include/modals/importUnitModal.html' %}
+  {% include 'humanresource/include/modals/view_selection_modal.html' %}
+  {% include 'humanresource/include/modals/delete_modal.html' %}
+
+</div>
+
+<script src="{% static 'housing/js/units.js' %}"></script>
+{% endblock %}

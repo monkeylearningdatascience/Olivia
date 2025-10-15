@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<!-- Department Specific CSS -->
+<link href="{% static 'humanresource/css/humanresource.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <!-- Clickable Header -->
+  <h3 class="fw-bold">
+    <a href="{% url 'humanresource_home' %}" class="text-decoration-none text-dark">
+      Human Resource
+    </a>
+  </h3>
+
+  <!-- Equal Width Tabs -->
+  <ul class="nav hr-tabs nav-fill mt-4">
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_petty_cash' %}active{% endif %}"
+        href="{% url 'hr_petty_cash' %}"><span>Petty Cash</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_leave' %}active{% endif %}"
+        href="{% url 'hr_leave' %}"><span>Leave</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_notice' %}active{% endif %}"
+        href="{% url 'hr_work_notice' %}"><span>Notice</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_clearance' %}active{% endif %}"
+        href="{% url 'hr_clearance' %}"><span>Clearance</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_letters' %}active{% endif %}"
+        href="{% url 'hr_work_letters' %}"><span>Letters</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_medical_declarations' %}active{% endif %}"
+        href="{% url 'hr_medical_declarations' %}"><span>Declarations</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_staff_hiring_evaluation' %}active{% endif %}"
+        href="{% url 'hr_staff_hiring_evaluation' %}"><span>Hiring</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_transfer_request' %}active{% endif %}"
+        href="{% url 'hr_transfer_request' %}"><span>Transfer</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_amendments' %}active{% endif %}"
+        href="{% url 'hr_contract_amendments' %}"><span>Amendments</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_termination' %}active{% endif %}"
+        href="{% url 'hr_contract_termination' %}"><span>Termination</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_monthly_attendance' %}active{% endif %}"
+        href="{% url 'hr_monthly_attendance' %}"><span>Attendance</span></a>
+    </li>
+    <li class="nav-item col-3 col-sm-4 col-md-auto">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_overtime' %}active{% endif %}"
+        href="{% url 'hr_overtime' %}"><span>Overtime</span></a>
+    </li>
+  </ul>
+
+  <!-- Page Content -->
+  <div class="mt-4">
+    {% block hr_content %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+      <div class="col-lg-6">
+        <div class="card text-bg-light h-100">
+          <div class="card-header text-bg-dark d-flex justify-content-between align-items-center">
+            <span>Current Balance</span>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateBalanceModal">
+              <i class="bi bi-gear-fill"></i> Update
+            </button>
+          </div>
+          <div class="card-body">
+            {% if project_balances %}
+            <div class="row">
+              {% for pb in project_balances %}
+              <div class="col-md-6">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h6 class="card-title fw-semibold mb-1">
+                      {{ pb.name }}
+                    </h6>
+                    <hr>
+                    <div class="row">
+                      <div class="col-6">Opening</div>
+                      <div class="col-6 text-end">{{ pb.opening_balance|floatformat:2 }}</div>
+                    </div>
+                    <div class="row">
+                      <div class="col-6">Replenishment</div>
+                      <div class="col-6 text-end">{{ pb.replenishment|floatformat:2 }}</div>
+                    </div>
+                    <div class="row">
+                      <div class="col-6">Submitted</div>
+                      <div class="col-6 text-end">{{ pb.submitted_nonblank|floatformat:2 }}</div>
+                    </div>
+                    <br>
+                    <div class="row">
+                      <div class="col-6 text-danger">Not Submitted</div>
+                      <div class="col-6 text-end text-danger">{{ pb.submitted_blank|floatformat:2 }}</div>
+                    </div>
+                    <div class="row">
+                      <div class="col-6 text-success"><strong>Available</strong></div>
+                      <div class="col-6 text-end text-success"><strong>{{ pb.available_balance|floatformat:2 }}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p>No project balances available.</p>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endblock %}
+  </div>
+  {% include 'humanresource/include/modals/updateBalancemodal.html' %}
+</div>
+{% block extra_js %}
+<script src="{% static 'humanresource/js/update_balance.js' %}"></script>
+{% endblock %}
+
+{% endblock %}

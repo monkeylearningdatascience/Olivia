@@ -1,0 +1,47 @@
+/* ---------------- Company Table ---------------- */
+.company-card-body table {
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.company-card-body table th {
+    font-weight: 600;
+    background-color: #f1f3f5;
+}
+
+.company-card-body table td {
+    vertical-align: middle;
+}
+
+/* * FIX: Apply background color to both the row and its cells 
+ * to guarantee the highlight is visible (especially the checkbox column).
+ */
+.new-entry,
+.new-entry td {
+    background-color: #e6f7ff !important; 
+}
+
+/* Highlight the latest company entry (first row) */
+.new-entry {
+    font-weight: 500;
+    transition: background-color 0.5s ease;
+    animation: highlightFade 2s ease;
+}
+
+/* Hover effect for company rows */
+.table-hover tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Fade animation */
+@keyframes highlightFade {
+    from {
+        background-color: #e6f7ff;
+    }
+    to {
+        background-color: transparent;
+    }
+}

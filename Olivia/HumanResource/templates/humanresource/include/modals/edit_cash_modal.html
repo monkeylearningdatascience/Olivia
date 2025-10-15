@@ -1,0 +1,47 @@
+<div class="modal fade" id="editCashModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-3 border-0 shadow">
+
+      <!-- Header -->
+      <div class="modal-header bg-light border-0">
+        <h5 class="modal-title fw-semibold">Edit Petty Cash Entry</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form method="POST" enctype="multipart/form-data" id="editCashForm">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="edit_id">
+
+          <div class="row g-3">
+            <!-- Same fields as Add Modal, but IDs prefixed with edit_ -->
+            <div class="col-md-6">
+              <label for="edit_date" class="form-label">Date</label>
+              <input type="date" name="date" class="form-control" id="edit_date" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="edit_supplier" class="form-label">Supplier Name</label>
+              <input type="text" name="supplier_name" class="form-control" id="edit_supplier" required>
+            </div>
+
+            <!-- Add all other fields same as Add Modal -->
+            <!-- Example: -->
+            <div class="col-md-6">
+              <label for="edit_amount" class="form-label">Amount</label>
+              <input type="number" name="amount" step="0.01" class="form-control" id="edit_amount" required>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer mt-4">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

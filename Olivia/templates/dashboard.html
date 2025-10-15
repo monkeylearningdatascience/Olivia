@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Welcome, {{ user.last_name|default:user.username }}!</h2>
+  <!-- <p>Select a department from the sidebar.</p> -->
+</div>
+{% endblock %}

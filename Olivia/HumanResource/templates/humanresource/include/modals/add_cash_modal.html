@@ -1,0 +1,121 @@
+<div class="modal fade" id="cashModal" tabindex="-1" aria-labelledby="cashModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-3 border-0 shadow">
+
+      <!-- Header -->
+      <div class="modal-header bg-dark border-0">
+        <h5 class="modal-title fw-semibold text-white" id="cashModalLabel">Add Petty Cash Entry</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form id="cashForm" method="POST" enctype="multipart/form-data action="{% url 'hr_petty_cash' %}">
+          {% csrf_token %}
+          <!-- Hidden ID for edit -->
+          <input type="hidden" name="cash_id" id="cash_id">
+          <!-- <input type="hidden" name="submitted_date" id="id_submitted_date"> -->
+
+          <div class="row g-3">
+            <!-- Date -->
+            <div class="col-md-6">
+              <label for="id_date" class="form-label">Date</label>
+              <input type="date" name="date" class="form-control" required id="id_date">
+            </div>
+
+            <!-- Supplier -->
+            <div class="col-md-6">
+              <label for="id_supplier_name" class="form-label">Supplier Name</label>
+              <input type="text" name="supplier_name" class="form-control" maxlength="255" required
+                id="id_supplier_name">
+            </div>
+
+            <!-- Department -->
+            <div class="col-md-6">
+              <label for="id_department" class="form-label">Department</label>
+              <select name="department" class="form-select" required id="id_department">
+                <option value="" selected>---------</option>
+                <option value="finance">Finance</option>
+                <option value="hr">Human Resources</option>
+                <option value="it">IT</option>
+                <option value="logistics">Logistics</option>
+                <option value="procurement">Procurement</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Project -->
+            <div class="col-md-6">
+              <label for="id_project_name" class="form-label">Project</label>
+              <select name="project_name" class="form-select" required id="id_project_name">
+                <option value="" selected>---------</option>
+                <option value="1">NRC9</option>
+                <option value="2">NRC5</option>
+              </select>
+            </div>
+
+            <!-- Item -->
+            <div class="col-12">
+              <label for="id_item_description" class="form-label">Item Description</label>
+              <input type="text" name="item_description" class="form-control" required id="id_item_description">
+            </div>
+
+            <!-- Invoice -->
+            <div class="col-md-6">
+              <label for="id_invoice_number" class="form-label">Invoice Number</label>
+              <input type="text" name="invoice_number" class="form-control" maxlength="100" id="id_invoice_number">
+            </div>
+
+            <!-- Amount -->
+            <div class="col-md-6">
+              <label for="id_amount" class="form-label">Amount</label>
+              <input type="number" name="amount" class="form-control" step="0.01" required id="id_amount">
+            </div>
+
+            <!-- VAT -->
+            <div class="col-md-4">
+              <label for="id_vat" class="form-label">VAT</label>
+              <input type="number" name="vat" value="0" class="form-control" step="0.01" required id="id_vat">
+            </div>
+
+            <!-- Import Duty -->
+            <div class="col-md-4">
+              <label for="id_import_duty" class="form-label">Import Duty</label>
+              <input type="number" name="import_duty" value="0" class="form-control" step="0.01" required
+                id="id_import_duty">
+            </div>
+
+            <!-- Discount -->
+            <div class="col-md-4">
+              <label for="id_discount" class="form-label">Discount</label>
+              <input type="number" name="discount" value="0" class="form-control" step="0.01" required id="id_discount">
+            </div>
+
+            <!-- Total -->
+            <div class="col-md-6">
+              <label for="id_total" class="form-label">Total</label>
+              <input type="number" name="total" class="form-control" step="0.01" required id="id_total">
+            </div>
+
+            <!-- Attachments -->
+            <div class="col-md-6">
+              <label for="id_attachments" class="form-label">Attachment</label>
+              <input type="file" name="attachments" class="form-control" id="id_attachments">
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer mt-4">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"
+              id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-success" id="cashSubmitBtn">
+              <i class="bi bi-save me-1"></i> Save
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- End of Add/Edit Cash Modal -->

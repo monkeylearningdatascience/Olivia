@@ -1,0 +1,41 @@
+<div class="modal fade" id="updateBalanceModal" tabindex="-1" aria-labelledby="updateBalanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content rounded-3 border-0 shadow">
+            <div class="modal-header bg-dark border-0">
+                <h5 class="modal-title fw-semibold text-white" id="updateBalanceModalLabel">Update Balance</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateBalanceForm" method="post" action="{% url 'update_balance_entry' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="balance_id" id="balance_id">
+                    <div class="mb-3">
+                        <label for="update_amount" class="form-label">Amount</label>
+                        <input type="text" class="form-control" id="update_amount" name="amount">
+                    </div>
+                    <div class="mb-3">
+                        <label for="update_activity" class="form-label">Activity</label>
+                        <select class="form-select" id="update_activity" name="activity">
+                            <option selected disabled>Select Activity</option>
+                            <option value="opening">Opening Balance</option>
+                            <option value="submitted">Submitted to HQ</option>
+                            <option value="received">Replenishment from HQ</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="update_project_name" class="form-label">Project Name</label>
+                        <select class="form-select" id="update_project_name" name="project_name">
+                            <option selected disabled>Select Project</option>
+                            <option value="NRC9">NRC9</option>
+                            <option value="NRC5">NRC5</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="updateModalSubmitBtn" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>

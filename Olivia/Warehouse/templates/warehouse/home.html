@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="fw-bold">Warehouse</h3>
+
+    <!-- Equal Width Tabs -->
+  <ul class="nav hr-tabs nav-fill mt-4">
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_petty_cash' %}active{% endif %}"
+        href="{% url 'hr_petty_cash' %}"><span>Petty Cash</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_leave' %}active{% endif %}"
+        href="{% url 'hr_leave' %}"><span>Leave</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_notice' %}active{% endif %}"
+        href="{% url 'hr_work_notice' %}"><span>Notice</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_clearance' %}active{% endif %}"
+        href="{% url 'hr_clearance' %}"><span>Clearance</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_letters' %}active{% endif %}"
+        href="{% url 'hr_work_letters' %}"><span>Letters</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_medical_declarations' %}active{% endif %}"
+        href="{% url 'hr_medical_declarations' %}"><span>Declarations</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_staff_hiring_evaluation' %}active{% endif %}"
+        href="{% url 'hr_staff_hiring_evaluation' %}"><span>Hiring</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_transfer_request' %}active{% endif %}"
+        href="{% url 'hr_transfer_request' %}"><span>Transfer</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_amendments' %}active{% endif %}"
+        href="{% url 'hr_contract_amendments' %}"><span>Amendments</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_termination' %}active{% endif %}"
+        href="{% url 'hr_contract_termination' %}"><span>Termination</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_monthly_attendance' %}active{% endif %}"
+        href="{% url 'hr_monthly_attendance' %}"><span>Attendance</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'hr_overtime' %}active{% endif %}"
+        href="{% url 'hr_overtime' %}"><span>Overtime</span></a>
+    </li>
+  </ul>
+  
+  <!-- Page Content -->
+  <div class="mt-4">
+    {% block hr_content %}
+    <div class="card mt-3 shadow">
+      <div class="card-body">
+        <p class="text-muted">Welcome to the Human Resource Department!</p>
+      </div>
+    </div>
+    {% endblock %}
+  </div>
+</div>
+{% endblock %}

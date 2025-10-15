@@ -1,0 +1,164 @@
+{% extends "humanresource/home.html" %}
+{% load static %}
+
+{% block hr_content %}
+<div class="card shadow-lg border-0 rounded-3 mt-4">
+
+  <!-- Card Header -->
+  <div class="card-header bg-white border-0 px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <!-- Title -->
+      <h3 class="fw-semibold mb-0" style="font-family: 'Poppins', sans-serif;">
+        Petty Cash
+      </h3>
+
+      <!-- Search Box -->
+      <div class="search-box mx-3">
+        <input placeholder="Search..." id="search" class="form-control shadow-none" type="search">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="btn-group">
+        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#cashModal">
+          <i class="bi bi-plus-circle me-1"></i> Create
+        </button>
+        <button id="viewBtn" class="btn btn-sm btn-outline-dark">
+          <i class="bi bi-eye me-1"></i> View
+        </button>
+
+        <button id="updateBtn" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil-square me-1"></i> Update
+        </button>
+        <button type="submit" name="delete_selected" class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
+          <i class="bi bi-trash me-1"></i> Delete
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="exportBtn">
+          <i class="bi bi-download me-1"></i> Export
+        </button>
+      </div>
+
+    </div>
+  </div>
+  <hr class="no-margin-hr">
+
+  <!-- Card Body with Table -->
+  <div class="card-body px-4 py-3">
+    <div class="table-responsive">
+      <table id="cashTable" class="table table-sm align-middle table-hover mb-0"
+        style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+        <thead class="table-light text-muted">
+          <tr>
+            <th scope="col">
+              <input type="checkbox" id="selectAll">
+            </th>
+            <th scope="col">Date</th>
+            <th scope="col">Supplier</th>
+            <th scope="col">Department</th>
+            <th scope="col">Description</th>
+            <th scope="col">Invoice #</th>
+            <th scope="col">Amount</th>
+            <th scope="col">VAT</th>
+            <th scope="col">Import Duty</th>
+            <th scope="col">Discount</th>
+            <th scope="col">Total</th>
+            <th scope="col">Project</th>
+            <th scope="col">Submitted Date</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for cash in cash_entries %}
+          <tr class="{% if forloop.first %}table-success new-entry{% endif %}"
+            data-attachment="{% if cash.attachments %}{{ cash.attachments.url }}{% else %}{% endif %}"
+            data-id="{{ cash.id }}" data-date="{{ cash.date|date:'Y-m-d' }}" data-supplier="{{ cash.supplier_name }}"
+            data-department="{{ cash.department }}" data-project="{{ cash.project.id }}"
+            data-item="{{ cash.item_description }}" data-invoice="{{ cash.invoice_number }}"
+            data-amount="{{ cash.amount }}" data-vat="{{ cash.vat }}" data-duty="{{ cash.import_duty }}"
+            data-discount="{{ cash.discount }}" data-total="{{ cash.total }}">
+            <td>
+              <input type="checkbox" class="select-entry" name="selected_entries" id="{{ cash.id }}"
+                value="{{ cash.id }}">
+            </td>
+            <td>{{ cash.date }}</td>
+            <td class="supplier">{{ cash.supplier_name }}</td>
+            <td class="department">{{ cash.department }}</td>
+            <td>{{ cash.item_description }}</td>
+            <td class="invoice">{{ cash.invoice_number }}</td>
+            <td>{{ cash.amount }}</td>
+            <td>{{ cash.vat }}</td>
+            <td>{{ cash.import_duty }}</td>
+            <td>{{ cash.discount }}</td>
+            <td>{{ cash.total }}</td>
+            <td class="project">{{ cash.project_name }}</td>
+            <td>
+              {% if cash.submitted_date %}
+              {{ cash.submitted_date|date:"Y-m-d" }}
+              {% else %}
+              -
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="14" class="text-center text-muted">
+              No petty cash records found
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+
+  <!-- Card Footer -->
+  <div class="card-footer bg-white border-0 rounded-3 py-3 px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <!-- Entries info and rows per page -->
+      <div class="d-flex align-items-center small text-muted">
+        <span class="me-3">
+          Showing {{ cash_entries.start_index }} to {{ cash_entries.end_index }} of {{ cash_entries.paginator.count }}
+          entries
+        </span>
+      </div>
+
+      <!-- Pagination buttons with arrows -->
+      <div class="d-flex gap-2">
+        {% if cash_entries.has_previous %}
+        <a href="?page={{ cash_entries.previous_page_number }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-chevron-left"></i> Previous
+        </a>
+        {% else %}
+        <button class="btn btn-outline-secondary btn-sm" disabled>
+          <i class="bi bi-chevron-left"></i> Previous
+        </button>
+        {% endif %}
+
+        {% if cash_entries.has_next %}
+        <a href="?page={{ cash_entries.next_page_number }}" class="btn btn-outline-secondary btn-sm">
+          Next <i class="bi bi-chevron-right"></i>
+        </a>
+        {% else %}
+        <button class="btn btn-outline-secondary btn-sm" disabled>
+          Next <i class="bi bi-chevron-right"></i>
+        </button>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Include Modals -->
+  {% include 'humanresource/include/modals/delete_modal.html' %}
+  {% include 'humanresource/include/modals/add_cash_modal.html' %}
+  {% include 'humanresource/include/modals/attachment_modal.html' %}
+  {% include 'humanresource/include/modals/update_selection_modal.html' %}
+
+</div>
+<!-- End of Card -->
+
+<!-- Link JS -->
+<script src="{% static 'humanresource/js/petty_cash.js' %}"></script>
+{% endblock %}
