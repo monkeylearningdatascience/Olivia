@@ -1,0 +1,24 @@
+# Django database files
+db.sqlite3
+db.sqlite3-journal
+db.sqlite3-wal
+db.sqlite3-shm
+
+# Database inside Olivia folder (your project structure)
+Olivia/db.sqlite3
+Olivia/db.sqlite3-journal
+Olivia/db.sqlite3-wal
+Olivia/db.sqlite3-shm
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+env/
+
+# Node / React files (if you add React later)
+node_modules/
+build/
+dist/
