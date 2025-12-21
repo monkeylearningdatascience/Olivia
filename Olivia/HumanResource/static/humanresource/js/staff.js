@@ -7,8 +7,23 @@ document.addEventListener('DOMContentLoaded', function () {
   const tableBody = document.getElementById('staffTableBody');
   const staffForm = document.getElementById('staffForm');
   const staffModalEl = document.getElementById('staffModal');
+  const staffModalHeader = document.getElementById('staffModalHeader');
+  const deleteConfirmHeader = document.getElementById('deleteConfirmModalHeader');
   // Use getOrCreateInstance instead of new bootstrap.Modal
   const getStaffModal = () => staffModalEl ? bootstrap.Modal.getOrCreateInstance(staffModalEl) : null;
+
+  const setStaffHeader = (mode = 'create') => {
+    if (!staffModalHeader) return;
+    staffModalHeader.classList.remove('bg-dark', 'bg-danger', 'bg-primary');
+    staffModalHeader.classList.add('modal-header', 'border-0');
+    staffModalHeader.classList.add(mode === 'update' ? 'bg-primary' : 'bg-primary');
+  };
+
+  const setDeleteHeader = () => {
+    if (!deleteConfirmHeader) return;
+    deleteConfirmHeader.classList.remove('bg-dark', 'bg-primary', 'bg-success');
+    deleteConfirmHeader.classList.add('modal-header', 'border-0', 'bg-danger');
+  };
 
   let selectedIds = [];
 
@@ -37,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
       staffForm.reset();
       document.getElementById('employee_id').value = '';
       document.getElementById('staffModalLabel').innerText = 'Add Staff';
+      setStaffHeader('create');
       // hide photo preview
       const preview = document.getElementById('photoPreview');
       if (preview) { preview.src = ''; preview.classList.add('d-none'); }
@@ -85,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         document.getElementById('id_employment_status').value = data.employment_status || 'active';
         document.getElementById('staffModalLabel').innerText = 'Update Staff';
+        setStaffHeader('update');
         staffModal.show();
       } catch (err) {
         console.error(err);
@@ -179,6 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       const confirmModalEl = document.getElementById('deleteConfirmModal');
       const confirmModal = confirmModalEl ? bootstrap.Modal.getOrCreateInstance(confirmModalEl) : null;
+      setDeleteHeader();
       if (confirmModal) confirmModal.show();
 
       const confirmBtn = document.getElementById('confirmDeleteBtn');

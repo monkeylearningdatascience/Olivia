@@ -1,43 +1,51 @@
-// Prevent multiple executions
-if (window.locationJsInitialized) {
-    return;
-}
-window.locationJsInitialized = true;
+// Wrap in an IIFE to allow early return without syntax error
+(function () {
+    // Prevent multiple executions
+    if (window.locationJsInitialized) {
+        return;
+    }
+    window.locationJsInitialized = true;
 
-// location.js
-function updateUnitLocation() {
-    const area = document.getElementById("area")?.value || "";
-    const block = document.getElementById("block")?.value || "";
-    const building = document.getElementById("building")?.value || "";
-    const floor = document.getElementById("floor")?.value || "";
+    // location.js
+    function updateUnitLocation() {
+        const area = document.getElementById("area")?.value || "";
+        const block = document.getElementById("block")?.value || "";
+        const building = document.getElementById("building")?.value || "";
+        const floor = document.getElementById("floor")?.value || "";
 
-    const parts = [area, block, building, floor].filter(Boolean);
-    document.getElementById("unit_location").value = parts.join(" - ");
-}
+        const parts = [area, block, building, floor].filter(Boolean);
+        const target = document.getElementById("unit_location");
+        if (target) {
+            target.value = parts.join(" - ");
+        }
+    }
 
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".unit-part").forEach(input => {
-        input.addEventListener("change", updateUnitLocation);
-    });
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".unit-part").forEach((input) => {
+            input.addEventListener("change", updateUnitLocation);
+        });
 
-    // Reset modal form when opened in Add mode
-    const unitModalElement = document.getElementById('unitModal');
-    if (unitModalElement) {
-        unitModalElement.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            // Only reset for Add mode (not Edit)
-            if (button && !button.classList.contains('edit-btn')) {
-                const form = document.getElementById('unitForm');
-                if (form) {
-                    form.reset();
-                    document.getElementById('unit_location').value = '';
-                    document.getElementById('unitModalLabel').innerText = 'Add New Room';
-                    const submitBtn = document.getElementById('unitSubmitBtn');
-                    if (submitBtn) {
-                        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+        // Reset modal form when opened in Add mode
+        const unitModalElement = document.getElementById("unitModal");
+        if (unitModalElement) {
+            unitModalElement.addEventListener("show.bs.modal", function (event) {
+                const button = event.relatedTarget;
+                // Only reset for Add mode (not Edit)
+                if (button && !button.classList.contains("edit-btn")) {
+                    const form = document.getElementById("unitForm");
+                    if (form) {
+                        form.reset();
+                        const locInput = document.getElementById("unit_location");
+                        if (locInput) locInput.value = "";
+                        const label = document.getElementById("unitModalLabel");
+                        if (label) label.innerText = "Add New Room";
+                        const submitBtn = document.getElementById("unitSubmitBtn");
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                        }
                     }
                 }
-            }
-        });
-    }
-});
+            });
+        }
+    });
+})();

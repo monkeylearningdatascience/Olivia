@@ -58,7 +58,7 @@ h6 { font-size: 14px; }
 }
 
 .logout-btn {
-  color: #1a1a1a;
+  color: #ffffff;
   border: 1px solid #e5e5e5;
   border-radius: 4px;
   padding: 0.5rem 1rem;
@@ -180,12 +180,13 @@ h6 { font-size: 14px; }
 }
 
 .btn-secondary {
-  background-color: #e5e5e5;
+  background-color: transparent;
   color: #1a1a1a;
+  /* border: 1px solid #e5e5e5; */
 }
 
 .btn-secondary:hover {
-  background-color: #d0d0d0;
+  background-color: #f5f5f5;
   color: #1a1a1a;
 }
 
@@ -219,13 +220,25 @@ h6 { font-size: 14px; }
   color: #1a1a1a;
 }
 
+/* Make outline-secondary match secondary for consistent Cancel/Close buttons */
+.btn-outline-secondary {
+  color: #1a1a1a;
+  /* border: 1px solid #e5e5e5; */
+  background-color: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #f5f5f5;
+  color: #1a1a1a;
+}
+
 /* ==================== FORMS ==================== */
 .form-control,
 .form-select {
   border: 1px solid #e5e5e5;
   border-radius: 4px;
   font-family: 'Poppins', sans-serif;
-  padding: 0.75rem;
+  /* padding: 0.75rem; */
   font-size: 14px;
   transition: all 0.2s ease;
 }
@@ -258,7 +271,29 @@ h6 { font-size: 14px; }
 
 .modal-title {
   font-weight: 600;
-  color: #1a1a1a;
+  color: inherit;
+}
+
+/* Ensure modal headers respect utility backgrounds */
+.modal-header.bg-primary {
+  background-color: #0d6efd !important;
+  color: #ffffff;
+}
+
+.modal-header.bg-danger {
+  background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity, 1)) !important;
+  color: #ffffff;
+}
+
+.modal-header.bg-dark {
+  background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity, 1)) !important;
+  color: #ffffff;
+}
+
+.modal-header.bg-primary .modal-title,
+.modal-header.bg-danger .modal-title,
+.modal-header.bg-dark .modal-title {
+  color: #ffffff;
 }
 
 .modal-body {
@@ -269,11 +304,11 @@ h6 { font-size: 14px; }
 .modal-footer {
   border-top: 1px solid #e5e5e5;
   padding: 1.5rem;
-  background-color: #f9f9f9;
+  /* background-color: #f9f9f9; */
 }
 
 .btn-close {
-  filter: invert(0);
+  filter: invert(1) grayscale(100%);
 }
 
 /* ==================== ALERTS ==================== */
@@ -354,13 +389,25 @@ tbody tr:hover {
   color: #0066cc;
 }
 
-/* Remove solid backgrounds for utility bg-* colors */
+/* Restore solid backgrounds where needed */
 .bg-primary,
 .bg-success,
 .bg-warning,
 .bg-info,
 .bg-white {
-  background-color: transparent !important;
+  /* background-color: transparent !important; */
+}
+
+/* Ensure view modals (dark header) render properly */
+.bg-dark {
+  --bs-bg-opacity: 1;
+  background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+}
+
+/* Ensure delete modals (danger header) render properly */
+.bg-danger {
+  --bs-bg-opacity: 1;
+  background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
 }
 
 .card {

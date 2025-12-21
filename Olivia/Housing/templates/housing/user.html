@@ -130,12 +130,9 @@
 
 </div>
 
-{# scripts: make sure jQuery is available before user.js (company.html uses jQuery from CDN) #}
+{# scripts: make sure jQuery is available before user.js #}
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"
   integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-  xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 <script src="{% static 'housing/js/user.js' %}?v=20251221b"></script>
 {% endblock %}
