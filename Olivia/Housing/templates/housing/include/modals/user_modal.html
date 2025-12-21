@@ -1,0 +1,109 @@
+{% load countries %}
+{% get_countries as countries%}
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title text-white" id="userModalLabel">Create User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="userForm">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="userId" name="id" value="">
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="username" name="username" autocomplete="name" required="">
+            </div>
+
+            <div class="col-md-4">
+              <label for="groupSelect" class="form-label">Group</label>
+              <select class="form-select" id="groupSelect" name="group_id">
+                <option value="">Select Group...</option>
+                {% for group in groups %}
+                <option value="{{ group.id }}">{{ group.company_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label for="companySelect" class="form-label">Company</label>
+              <select class="form-select" id="companySelect" name="company_id">
+                <option value="">Select Company...</option>
+                <!-- dynamically filled by JS -->
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label for="governmentId" class="form-label">Government ID</label>
+              <input type="text" class="form-control" id="governmentId" name="government_id" autocomplete="off">
+            </div>
+
+            <div class="col-md-4">
+              <label for="idType" class="form-label">ID Type</label>
+              <input type="text" class="form-control" id="idType" name="id_type" autocomplete="off">
+            </div>
+
+            <div class="col-md-4">
+              <label for="neomId" class="form-label">NEOM ID</label>
+              <input type="text" class="form-control" id="neomId" name="neom_id" autocomplete="off">
+            </div>
+
+            <div class="col-md-4">
+              <label for="dob" class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" id="dob" name="dob">
+            </div>
+
+            <div class="col-md-4">
+              <label for="mobileUser" class="form-label">Mobile</label>
+              <input type="text" class="form-control" id="mobileUser" name="mobile" placeholder="Enter mobile">
+            </div>
+
+            <div class="col-md-4">
+              <label for="emailUser" class="form-label">Email</label>
+              <input type="email" class="form-control" id="emailUser" name="email" placeholder="Enter email"
+                autocomplete="email">
+            </div>
+
+            <div class="col-md-4">
+              <label for="nationality" class="form-label">Nationality</label>
+              <select name="nationality" id="nationality" class="form-control">
+                <option value="">-- Select Nationality --</option>
+                {% for country in countries %}
+                <option value="{{ country.code }}" {% if user.nationality == country.code %}selected{% endif %}>
+                  {{ country.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label for="religion" class="form-label">Religion</label>
+              <select class="form-select" id="religion" name="religion">
+                <option value="">Select...</option>
+                <option value="Muslim">Muslim</option>
+                <option value="Non Muslim">Non Muslim</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label for="status" class="form-label">Status</label>
+              <select class="form-select" id="status" name="status">
+                <option value="">Select...</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Pending">Pending</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" id="saveUserBtn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

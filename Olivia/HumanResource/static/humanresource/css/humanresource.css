@@ -184,12 +184,21 @@
     opacity: 1;
 }
 
-@keyframes highlightFade {
-    from {
-        background-color: #e6f7ff;
-    }
+/* Highlight the first entry (staff/petty cash) */
+.new-entry,
+.new-entry td {
+    background-color: #c1d6cc !important;
+}
 
-    to {
-        background-color: transparent;
+.new-entry {
+    font-weight: 500;
+}
+
+@keyframes highlightFade {
+    0% {
+        background-color: #c1d6cc;
+    }
+    100% {
+        background-color: #c1d6cc;
     }
 }

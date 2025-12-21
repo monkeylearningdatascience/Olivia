@@ -1,0 +1,55 @@
+<!-- Import Staff Modal -->
+<div class="modal fade" id="importStaffModal" tabindex="-1" aria-labelledby="importStaffModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content rounded-3 shadow-lg border-0">
+
+      <!-- Header -->
+      <div class="modal-header bg-dark text-white border-0">
+        <h5 class="modal-title fw-bold text-white" id="importStaffModalLabel">
+          <i class="bi bi-file-earmark-spreadsheet me-2"></i>Import Staff Data (.xlsx)
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <p class="text-muted">Upload an Excel file (.xlsx) containing staff data. Ensure column headers match the employee fields for successful import.</p>
+        
+        <!-- Action URL must match your Django URL name 'import_staff' -->
+        <form id="importStaffForm" method="POST" enctype="multipart/form-data" action="{% url 'import_staff' %}">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="staffExcelFile" class="form-label fw-bold">Select Excel File</label>
+            <input class="form-control" type="file" id="staffExcelFile" name="excel_file" accept=".xlsx" required>
+          </div>
+
+          <div id="importStaffLoadingIndicator" class="alert alert-info d-none">
+            <i class="bi bi-arrow-clockwise me-2 spin"></i>
+            Processing staff... Please wait, this may take a moment.
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer mt-4 p-0 border-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-dark" id="importStaffSubmitBtn">
+              <i class="bi bi-cloud-arrow-up me-1"></i> Upload & Import
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Custom CSS for spin effect, necessary if not in your main stylesheet -->
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+</style>

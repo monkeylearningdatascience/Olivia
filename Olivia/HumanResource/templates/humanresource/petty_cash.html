@@ -19,24 +19,7 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="btn-group">
-        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#cashModal">
-          <i class="bi bi-plus-circle me-1"></i> Create
-        </button>
-        <button id="viewBtn" class="btn btn-sm btn-outline-dark">
-          <i class="bi bi-eye me-1"></i> View
-        </button>
-
-        <button id="updateBtn" class="btn btn-sm btn-outline-primary">
-          <i class="bi bi-pencil-square me-1"></i> Update
-        </button>
-        <button type="submit" name="delete_selected" class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
-          <i class="bi bi-trash me-1"></i> Delete
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="exportBtn">
-          <i class="bi bi-download me-1"></i> Export
-        </button>
-      </div>
+      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewCashBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#cashModal"' show_view=True view_id='viewBtn' show_update=True update_id='updateBtn' show_delete=True delete_id='deleteSelectedBtn' delete_attrs='name="delete_selected"' show_export=True export_id='exportBtn' %}
 
     </div>
   </div>
@@ -160,5 +143,5 @@
 <!-- End of Card -->
 
 <!-- Link JS -->
-<script src="{% static 'humanresource/js/petty_cash.js' %}"></script>
+<script src="{% static 'humanresource/js/petty_cash.js' %}?v=20251221b"></script>
 {% endblock %}

@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-dark fw-bold">
+        <i class="fas fa-user-shield text-primary me-2"></i>
+        Role Permissions
+      </h1>
+      <p class="text-muted mb-0">Assign permissions to organizational levels</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">Role Permissions</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="row g-4">
+    <!-- Current Mappings -->
+    <div class="col-xl-8">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-semibold text-dark">
+              <i class="fas fa-link text-primary me-2"></i>
+              Current Permission Assignments
+            </h5>
+            <span class="badge bg-primary rounded-pill">{{ mappings|length }} assignments</span>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="border-0 fw-semibold text-muted ps-4">
+                    <i class="fas fa-layer-group me-2"></i>Organizational Level
+                  </th>
+                  <th class="border-0 fw-semibold text-muted">
+                    <i class="fas fa-shield-alt me-2"></i>Permission
+                  </th>
+                  <th class="border-0 fw-semibold text-muted">
+                    <i class="fas fa-info-circle me-2"></i>Details
+                  </th>
+                  <th class="border-0 fw-semibold text-muted text-end pe-4">
+                    <i class="fas fa-cogs me-2"></i>Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for m in mappings %}
+                <tr class="border-bottom border-light">
+                  <td class="ps-4">
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle bg-primary text-white me-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                        {{ m.organizational_level.name|slice:":1"|upper }}
+                      </div>
+                      <div>
+                        <h6 class="mb-0 fw-semibold">{{ m.organizational_level.name }}</h6>
+                        <small class="text-muted">Level {{ m.organizational_level.level }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span class="badge bg-light text-dark border px-3 py-2 me-2">
+                        {{ m.permission.app|title }}
+                      </span>
+                      <div>
+                        <span class="fw-medium">{{ m.permission.feature|title }}</span>
+                        <br>
+                        <small class="text-muted">{{ m.permission.action|upper }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="text-muted">{{ m.permission.description|truncatechars:50 }}</span>
+                  </td>
+                  <td class="text-end pe-4">
+                    <form method="post" action="{% url 'accounts:api_role_permission_delete' m.id %}"
+                          style="display:inline"
+                          onsubmit="return confirm('Are you sure you want to remove this permission assignment?')">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                        <i class="fas fa-trash-alt me-1"></i>Remove
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-5">
+                    <div class="empty-state">
+                      <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
+                      <h6 class="text-muted">No permission assignments</h6>
+                      <p class="text-muted small">Assign permissions to organizational levels to control access</p>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assignment Form -->
+    <div class="col-xl-4">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0 fw-semibold text-dark">
+            <i class="fas fa-plus-circle text-success me-2"></i>
+            Assign Permission to Level
+          </h5>
+        </div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Organizational Level Field -->
+            <div class="mb-3">
+              <label for="{{ form.organizational_level.id_for_label }}" class="form-label fw-semibold">
+                <i class="fas fa-layer-group text-primary me-1"></i>Organizational Level
+              </label>
+              <select class="form-select form-select-lg {% if form.organizational_level.errors %}is-invalid{% endif %}"
+                      id="{{ form.organizational_level.id_for_label }}" name="{{ form.organizational_level.name }}">
+                <option value="">Select Level</option>
+                {% for level in form.organizational_level.field.queryset %}
+                <option value="{{ level.id }}" {% if form.organizational_level.value == level.id|stringformat:"s" %}selected{% endif %}>
+                  {{ level.name }} (Level {{ level.level }})
+                </option>
+                {% endfor %}
+              </select>
+              {% if form.organizational_level.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.organizational_level.errors %}{{ error }}{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Permission Field -->
+            <div class="mb-4">
+              <label for="{{ form.permission.id_for_label }}" class="form-label fw-semibold">
+                <i class="fas fa-shield-alt text-primary me-1"></i>Permission
+              </label>
+              <select class="form-select form-select-lg {% if form.permission.errors %}is-invalid{% endif %}"
+                      id="{{ form.permission.id_for_label }}" name="{{ form.permission.name }}">
+                <option value="">Select Permission</option>
+                {% for perm in form.permission.field.queryset %}
+                <option value="{{ perm.id }}" {% if form.permission.value == perm.id|stringformat:"s" %}selected{% endif %}>
+                  {{ perm.app|title }} - {{ perm.feature|title }} ({{ perm.action|upper }})
+                </option>
+                {% endfor %}
+              </select>
+              {% if form.permission.errors %}
+                <div class="invalid-feedback">
+                  {% for error in form.permission.errors %}{{ error }}{% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">Choose which permission to assign to the selected level</div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                <i class="fas fa-link me-2"></i>
+                Assign Permission
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card shadow-sm border-0 rounded-3 mt-4">
+        <div class="card-body text-center">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="p-3 bg-primary bg-opacity-10 rounded-3">
+                <div class="h4 mb-0 text-primary">{{ mappings|length }}</div>
+                <small class="text-muted">Assignments</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-success bg-opacity-10 rounded-3">
+                <div class="h4 mb-0 text-success">
+                  {% widthratio mappings|length 1 1 %}
+                </div>
+                <small class="text-muted">Active</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help Card -->
+      <div class="card shadow-sm border-0 rounded-3 mt-4">
+        <div class="card-body">
+          <h6 class="card-title fw-semibold">
+            <i class="fas fa-question-circle text-info me-2"></i>
+            How it works
+          </h6>
+          <ul class="list-unstyled small text-muted mb-0">
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Assign permissions to organizational levels</li>
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Users inherit permissions from their level</li>
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Higher levels get more permissions</li>
+            <li><i class="fas fa-check text-success me-2"></i>Remove assignments to revoke access</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar-circle {
+  font-size: 16px;
+}
+
+.empty-state {
+  padding: 2rem 0;
+}
+
+.table > :not(caption) > * > * {
+  padding: 1rem 0.75rem;
+}
+
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+
+.form-select {
+  border: 2px solid #e9ecef;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+</style>
+
+<script>
+// Add confirmation for delete actions
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteButtons = document.querySelectorAll('button[type="submit"][formaction*="delete"]');
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      if (!confirm('Are you sure you want to remove this permission assignment?')) {
+        e.preventDefault();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

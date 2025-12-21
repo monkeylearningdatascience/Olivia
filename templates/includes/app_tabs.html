@@ -1,0 +1,28 @@
+{% comment %}Reusable app tabs without icons. Expects:
+- tabs: list of { name, url_name }
+- base_url (optional): catch-all route name (e.g., 'qhse_tab')
+- active_tab (optional): current tab url_name for catch-all routes
+{% endcomment %}
+<div class="card border-0 rounded-3 mb-4">
+  <div class="card-body p-2">
+    <div class="nav-scroll">
+      <ul class="nav nav-pills nav-fill flex-nowrap gap-2">
+        {% for tab in tabs %}
+        <li class="nav-item">
+          {% if active_tab %}
+            <a class="nav-link {% if active_tab == tab.url_name %}active{% endif %} rounded-pill"
+               href="{% if base_url %}{% url base_url tab.url_name %}{% else %}{% url tab.url_name %}{% endif %}">
+              <span class="fw-medium">{{ tab.name }}</span>
+            </a>
+          {% else %}
+            <a class="nav-link {% if request.resolver_match.url_name == tab.url_name %}active{% endif %} rounded-pill"
+               href="{% if base_url %}{% url base_url tab.url_name %}{% else %}{% url tab.url_name %}{% endif %}">
+              <span class="fw-medium">{{ tab.name }}</span>
+            </a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  </div>

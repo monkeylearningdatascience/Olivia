@@ -1,41 +1,57 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
-{% endblock %}
+{% block title %}Logistics - Olivia Portal{% endblock %}
+
+{% block extra_css %}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <!-- Clickable Header -->
-  <h3 class="fw-bold">
-    <a href="{% url 'logistics_home' %}" class="text-decoration-none text-dark">
-      Logistics
-    </a>
-  </h3>
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-dark fw-bold">
+        <a href="{% url 'logistics_home' %}" class="text-decoration-none text-dark hover-primary">
+          <i class="fas fa-truck text-primary me-2"></i>
+          Logistics
+        </a>
+      </h1>
+      <p class="text-muted mb-0 small">Supply chain and logistics management</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">Logistics</li>
+      </ol>
+    </nav>
+  </div>
 
-  <!-- Dynamic Tabs -->
-  <ul class="nav hr-tabs nav-fill mt-4">
-    {% for tab in tabs %}
-    <li class="nav-item">
-      <a class="nav-link {% if active_tab == tab.url_name %}active{% endif %}"
-        href="{% url 'logistics_tab' tab.url_name %}">
-        <span>{{ tab.name }}</span>
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
+  <!-- Modern Tabs -->
+  {% include 'includes/app_tabs.html' with tabs=tabs base_url='logistics_tab' active_tab=active_tab %}
+
+  <!-- Tab Content -->
   {% block hr_content %}
-  <div class="mt-4">
-    <div class="card mt-3 shadow">
-      <div class="card-body">
-        <p>Welcome to the Logistic department!</p>
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-5 text-center">
+          <div class="avatar-circle bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px; font-size: 36px;">
+            <i class="fas fa-truck"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Welcome to Logistics Department</h4>
+          <p class="text-muted mb-0">Manage supply chain, transportation, and logistics operations.</p>
+        </div>
       </div>
     </div>
   </div>
   {% endblock %}
 </div>
+
+<style>
+.hover-primary:hover { color: #0d6efd !important; transition: color 0.3s ease; }
+</style>
 {% endblock %}
+
 {% block extra_js %}
-<!-- <script src="{% static 'humanresource/js/humanresource.js' %}"></  script> -->
+<!-- <script src="{% static 'humanresource/js/humanresource.js' %}"></script> -->
 {% endblock %}

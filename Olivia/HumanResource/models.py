@@ -1,4 +1,5 @@
 from django.db import models
+from django_countries.fields import CountryField
 
 # Create your models here.
 # class Project(models.Model):
@@ -68,3 +69,34 @@ class Cash(models.Model):
 
     def __str__(self):
         return f"{self.supplier_name} - {self.project_name}"
+    
+def employee_photo_path(instance, filename):
+    # Use `staffid` as the unique identifier for employee photo path
+    identifier = getattr(instance, 'staffid', None) or getattr(instance, 'id', 'unknown')
+    return f'staff/photos/{identifier}/{filename}'
+
+class Employee(models.Model):
+    GENDER_CHOICES = [('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')]
+    STATUS_CHOICES = [('active', 'Active'), ('on_notice', 'On Notice'), ('exited', 'Exited')]
+
+    staffid = models.CharField(max_length=20, unique=True)
+    full_name = models.CharField(max_length=100)
+    position = models.CharField(max_length=100, blank=True)
+    department = models.CharField(max_length=100)
+    nationality = CountryField(blank_label='(Select Nationality)', null=True, blank=True)
+    email = models.EmailField(blank=True)
+    iqama_number = models.CharField(max_length=20, blank=True)
+    passport_number = models.CharField(max_length=20, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+    location = models.CharField(max_length=100, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    photo = models.ImageField(upload_to=employee_photo_path, blank=True, null=True)
+    photo_url = models.URLField(blank=True)  # fallback if using external
+    employment_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    documents = models.JSONField(default=list, blank=True)  # list of dicts
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        # Use staffid which exists on the model
+        return f"{self.full_name} ({self.staffid})"

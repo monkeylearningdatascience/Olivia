@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404, reverse, Http404
 from django.core.paginator import Paginator
-from .models import Cash, Balance, Project
-from .forms import CashForm
+from .models import Cash, Balance, Project, Employee
+from .forms import CashForm, EmployeeForm
 from utils.excel_exporter import export_to_excel
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.utils import timezone  # <-- Add this import
@@ -9,6 +9,7 @@ import decimal
 from django.db.models import Sum
 from Olivia.constants import HR_TABS
 from django.urls import reverse
+import pandas as pd
 
 
 def _render_template(request, template_name):
@@ -32,8 +33,8 @@ def hr_work_letters(request):
 def hr_medical_declarations(request):
     return _render_template(request, 'medical_declarations')
 
-def hr_staff_hiring_eval(request):
-    return _render_template(request, 'staff_hiring_evaluation')
+def hr_hiring(request):
+    return _render_template(request, 'hiring')
 
 def hr_transfer_request(request):
     return _render_template(request, 'transfer_request')
@@ -296,3 +297,267 @@ def humanresource_home(request):
         'project_balances': project_balances
     }
     return render(request, 'humanresource/home.html', context)
+
+
+def staff_create(request):
+    """Handle POST request to create a new employee via AJAX."""
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST, request.FILES)
+        if form.is_valid():
+            employee = form.save()
+            # If a photo was uploaded, ensure photo_url stores the file URL
+            if getattr(employee, 'photo', None):
+                try:
+                    employee.photo_url = employee.photo.url
+                    employee.save(update_fields=['photo_url'])
+                except Exception:
+                    pass
+            return JsonResponse({'success': True, 'id': employee.id, 'message': 'Employee created successfully', 'photo_url': employee.photo_url})
+        else:
+            # Return field-level errors for display in modal
+            field_errors = {field: [str(err) for err in errors] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': field_errors}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+def staff_update(request, id):
+    """Handle POST request to update an employee, or GET to fetch employee data for populate."""
+    employee = get_object_or_404(Employee, id=id)
+    
+    if request.method == 'GET':
+        # Return employee data as JSON for form population
+        data = {
+            'id': employee.id,
+            'staffid': employee.staffid,
+            'full_name': employee.full_name,
+            'position': employee.position,
+            'department': employee.department,
+            'nationality': str(employee.nationality) if employee.nationality else '',
+            'email': employee.email,
+            'iqama_number': employee.iqama_number,
+            'passport_number': employee.passport_number,
+            'gender': employee.gender,
+            'location': employee.location,
+            'start_date': employee.start_date.isoformat() if employee.start_date else '',
+            'photo_url': employee.photo_url,
+            'employment_status': employee.employment_status,
+        }
+        return JsonResponse(data)
+    
+    elif request.method == 'POST':
+        form = EmployeeForm(request.POST, request.FILES, instance=employee)
+        if form.is_valid():
+            employee = form.save()
+            # Update photo_url if a new photo was uploaded
+            if getattr(employee, 'photo', None):
+                try:
+                    employee.photo_url = employee.photo.url
+                    employee.save(update_fields=['photo_url'])
+                except Exception:
+                    pass
+            return JsonResponse({'success': True, 'id': employee.id, 'message': 'Employee updated successfully', 'photo_url': employee.photo_url})
+        else:
+            # Return field-level errors for display in modal
+            field_errors = {field: [str(err) for err in errors] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': field_errors}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+def staff_delete(request, id):
+    """Handle POST request to delete a single employee."""
+    if request.method == 'POST':
+        employee = get_object_or_404(Employee, id=id)
+        try:
+            employee.delete()
+            return JsonResponse({'success': True, 'message': 'Employee deleted successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def staff(request):
+    # Handle POST for Create/Update/Delete via AJAX
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        print(f"DEBUG: action = '{action}'")
+        print(f"DEBUG: POST keys = {list(request.POST.keys())}")
+        
+        if action == 'delete':
+            # Delete selected employees
+            selected_ids = request.POST.getlist('selected_ids')
+            # Filter out empty strings and convert to integers
+            selected_ids = [int(id) for id in selected_ids if id.strip()]
+            print(f"DEBUG: selected_ids = {selected_ids}")
+            if selected_ids:
+                try:
+                    Employee.objects.filter(id__in=selected_ids).delete()
+                    return JsonResponse({'success': True, 'message': 'Employees deleted successfully'})
+                except Exception as e:
+                    print(f"DEBUG: Delete exception: {e}")
+                    return JsonResponse({'success': False, 'message': str(e)}, status=500)
+            else:
+                return JsonResponse({'success': False, 'message': 'No valid IDs selected'}, status=400)
+
+        # Create or update an employee using EmployeeForm
+        try:
+            emp_id = request.POST.get('employee_id')
+            instance = None
+            if emp_id:
+                try:
+                    instance = Employee.objects.get(id=emp_id)
+                except Employee.DoesNotExist:
+                    instance = None
+
+            form = EmployeeForm(request.POST, request.FILES, instance=instance)
+            if form.is_valid():
+                employee = form.save()
+                # If a photo was uploaded, set the photo_url to the file URL
+                if getattr(employee, 'photo', None):
+                    try:
+                        employee.photo_url = employee.photo.url
+                        employee.save(update_fields=['photo_url'])
+                    except Exception:
+                        pass
+                message = 'Employee updated successfully' if instance else 'Employee created successfully'
+                return JsonResponse({'success': True, 'id': employee.id, 'message': message, 'photo_url': employee.photo_url})
+            else:
+                # Return field-level errors for display in modal
+                field_errors = {field: [str(err) for err in errors] for field, errors in form.errors.items()}
+                return JsonResponse({'success': False, 'errors': field_errors}, status=400)
+        except Exception as e:
+            print(f"DEBUG: Form processing exception: {e}")
+            return JsonResponse({'success': False, 'message': f'Form processing error: {str(e)}'}, status=500)
+
+    # GET - render staff list with pagination
+    employees_qs = Employee.objects.all().order_by('-created_at')  # Newest first
+    active_count = employees_qs.filter(employment_status='active').count()
+    on_notice = employees_qs.filter(employment_status='on_notice').count()
+    exited = employees_qs.filter(employment_status='exited').count()
+
+    # Paginate the staff list (25 per page)
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(employees_qs, 15)
+    staff_entries = paginator.get_page(page_number)
+
+    context = {
+        'employees': employees_qs,
+        'staff_entries': staff_entries,
+        'active_count': active_count,
+        'on_notice': on_notice,
+        'exited': exited,
+        'form': EmployeeForm(),  # Empty form for modal rendering
+    }
+    return render(request, 'humanresource/staff.html', context)
+
+
+def export_staff(request):
+    # simple CSV/Excel export for employees — reuse export_to_excel if available
+    queryset = Employee.objects.all().order_by('full_name')
+    headers = [
+        'Staff ID', 'Full Name', 'Position', 'Department', 'Nationality', 'Email', 'Iqama', 'Passport', 'Gender', 'Location', 'Start Date', 'Status'
+    ]
+
+    def row_data(e):
+        return [
+            e.staffid or '',
+            e.full_name or '',
+            e.position or '',
+            e.department or '',
+            e.nationality.name if getattr(e, 'nationality', None) else '',
+            e.email or '',
+            e.iqama_number or '',
+            e.passport_number or '',
+            e.gender or '',
+            e.location or '',
+            e.start_date.strftime('%B %d, %Y') if e.start_date else '',
+            e.employment_status or '',
+        ]
+
+    try:
+        return export_to_excel(queryset, headers, row_data, file_prefix='staff')
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def import_staff(request):
+    """Handles bulk import of staff data from Excel file."""
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+    
+    if 'excel_file' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'No file uploaded.'}, status=400)
+    
+    excel_file = request.FILES['excel_file']
+    
+    try:
+        df = pd.read_excel(excel_file)
+        
+        # Column mapping from Excel to model fields
+        column_mapping = {
+            'staffid': 'staffid',
+            'full_name': 'full_name',
+            'position': 'position',
+            'department': 'department',
+            'nationality': 'nationality',
+            'email': 'email',
+            'iqama_number': 'iqama_number',
+            'passport_number': 'passport_number',
+            'gender': 'gender',
+            'location': 'location',
+            'start_date': 'start_date',
+            'employment_status': 'employment_status',
+        }
+        
+        imported_count = 0
+        updated_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                employee_data = {}
+                
+                # Map and clean data
+                for excel_col, model_field in column_mapping.items():
+                    value = row.get(excel_col)
+                    if pd.isna(value) or value is pd.NaT:
+                        employee_data[model_field] = None
+                    else:
+                        employee_data[model_field] = value
+                
+                # staffid is the unique identifier for upsert
+                staffid = employee_data.get('staffid')
+                if not staffid:
+                    errors.append(f"Row {index + 1}: Missing staffid")
+                    continue
+                
+                # Try to update existing or create new
+                employee, created = Employee.objects.update_or_create(
+                    staffid=staffid,
+                    defaults=employee_data
+                )
+                
+                if created:
+                    imported_count += 1
+                else:
+                    updated_count += 1
+                    
+            except Exception as e:
+                errors.append(f"Row {index + 1}: {str(e)}")
+                continue
+        
+        return JsonResponse({
+            'success': True,
+            'imported': imported_count,
+            'updated': updated_count,
+            'errors': errors,
+            'message': f'Successfully imported {imported_count} and updated {updated_count} staff records.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'File processing error: {str(e)}'}, status=400)
+
+def humanresource_tab(request, tab):
+    return render(request, "humanresource/base.html", {
+        "tabs": HR_TABS,
+        "active_tab": tab,
+    })

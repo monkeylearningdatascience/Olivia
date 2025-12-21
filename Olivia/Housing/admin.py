@@ -1,7 +1,9 @@
-from django.contrib import admin
-from .models import Unit, CompanyGroup, UserCompany
+# Housing/admin.py
 
-# Register your models here.
+from django.contrib import admin
+from .models import Unit, CompanyGroup, UserCompany, HousingUser
+
+# --- 1. Unit Model Admin ---
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):
     list_display = (
@@ -21,7 +23,23 @@ class UnitAdmin(admin.ModelAdmin):
     search_fields = ("unit_number", "building", "floor", "zone")
     list_filter = ("building", "floor", "zone", "occupancy_status")
 
-admin.site.register(CompanyGroup)
+# --- 2. CompanyGroup Model Admin (Corrected Class Name) ---
+# NOTE: CompanyGroup should only contain group-level fields. 
+# Assuming it only has 'name' and possibly audit fields.
+@admin.register(CompanyGroup)
+class CompanyGroupAdmin(admin.ModelAdmin):
+    list_display = (
+        'company_name', 
+        'created_date', 
+        'modified_date',
+    )
+    search_fields = ('company_name',)
+    list_filter = ('created_date',)
+
+
+# --- 3. UserCompany Model Admin (Registered with its correct class) ---
+# This class contains details about an actual Company.
+@admin.register(UserCompany)
 class UserCompanyAdmin(admin.ModelAdmin):
     # This list explicitly tells Django which columns to display
     list_display = (
@@ -33,19 +51,21 @@ class UserCompanyAdmin(admin.ModelAdmin):
         'email_address', 
         'mobile', 
         'phone', 
-        # Audit Fields
         'created_date', 
         'modified_date',
-        # You can add 'address_text' and 'company_details' if you want long text in the list view,
-        # but it's usually better for the detail view.
     )
-
-    # Optional: Add filters to the sidebar
     list_filter = ('company_group', 'created_date')
-
-    # Optional: Add search fields
     search_fields = ('company_name', 'cr_number', 'vat_number', 'contact_name')
 
-# Unregister the simple registration and register the custom ModelAdmin
-# admin.site.register(UserCompany) # Comment this out if it was there
-admin.site.register(UserCompany, UserCompanyAdmin)
+
+# --- 4. HousingUser Model Admin ---
+@admin.register(HousingUser)
+class HousingUserAdmin(admin.ModelAdmin):
+    list_display = ("username", 
+                    "group", 
+                    "company", 
+                    "status")
+    
+    # Use FK lookups for searching related fields
+    search_fields = ("username", "group__company_name", "company__company_name")
+    list_filter = ("group", "company", "status")

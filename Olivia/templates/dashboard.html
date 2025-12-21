@@ -1,8 +1,268 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Olivia Portal{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2 class="mb-4">Welcome, {{ user.last_name|default:user.username }}!</h2>
-  <!-- <p>Select a department from the sidebar.</p> -->
+<div class="container-fluid px-4 py-4">
+  <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div>
+              <h1 class="h2 mb-2 text-white fw-bold">
+                <i class="fas fa-hand-wave me-2"></i>
+                Welcome back, {{ user.get_full_name|default:user.username }}!
+              </h1>
+              <p class="mb-0 opacity-75">
+                <i class="fas fa-calendar-day me-2"></i>
+                {% now "l, F j, Y" %}
+              </p>
+            </div>
+            <div class="text-end">
+              <div class="avatar-circle bg-white text-primary" style="width: 70px; height: 70px; font-size: 28px;">
+                {{ user.get_full_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-muted mb-1 small">Total Departments</p>
+              <h3 class="mb-0 fw-bold">{{ departments|length }}</h3>
+            </div>
+            <div class="avatar-circle bg-primary bg-opacity-10 text-primary" style="width: 50px; height: 50px; font-size: 24px;">
+              <i class="fas fa-building"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-muted mb-1 small">Active Modules</p>
+              <h3 class="mb-0 fw-bold">12</h3>
+            </div>
+            <div class="avatar-circle bg-success bg-opacity-10 text-success" style="width: 50px; height: 50px; font-size: 24px;">
+              <i class="fas fa-check-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-muted mb-1 small">Your Role</p>
+              <h6 class="mb-0 fw-bold">{{ user.organizational_level.name|default:"User" }}</h6>
+            </div>
+            <div class="avatar-circle bg-warning bg-opacity-10 text-warning" style="width: 50px; height: 50px; font-size: 24px;">
+              <i class="fas fa-user-shield"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <p class="text-muted mb-1 small">System Status</p>
+              <h6 class="mb-0 fw-bold text-success">
+                <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>
+                Online
+              </h6>
+            </div>
+            <div class="avatar-circle bg-info bg-opacity-10 text-info" style="width: 50px; height: 50px; font-size: 24px;">
+              <i class="fas fa-server"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Departments Grid -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0 fw-semibold">
+            <i class="fas fa-th-large text-primary me-2"></i>
+            Available Departments
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-4">
+            {% for dept in departments %}
+            <div class="col-xl-3 col-lg-4 col-md-6">
+              <a href="{{ dept.url }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 dept-card">
+                  <div class="card-body text-center p-4">
+                    <div class="avatar-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 60px; height: 60px; font-size: 28px;">
+                      <i class="{{ dept.icon }}"></i>
+                    </div>
+                    <h6 class="mb-0 fw-semibold text-dark">{{ dept.name }}</h6>
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+              <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+              <p class="text-muted">No departments available</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions & Info -->
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0 fw-semibold">
+            <i class="fas fa-bolt text-warning me-2"></i>
+            Quick Actions
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-4 col-sm-6">
+              <a href="{% url 'accounts:admin_org_levels' %}" class="btn btn-outline-primary w-100 py-3">
+                <i class="fas fa-layer-group d-block mb-2" style="font-size: 1.5rem;"></i>
+                Manage Levels
+              </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+              <a href="{% url 'accounts:admin_permissions' %}" class="btn btn-outline-success w-100 py-3">
+                <i class="fas fa-shield-alt d-block mb-2" style="font-size: 1.5rem;"></i>
+                Permissions
+              </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+              <a href="{% url 'accounts:admin_role_permissions' %}" class="btn btn-outline-info w-100 py-3">
+                <i class="fas fa-user-shield d-block mb-2" style="font-size: 1.5rem;"></i>
+                Role Permissions
+              </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+              <a href="{% url 'accounts:admin_assign_level' %}" class="btn btn-outline-warning w-100 py-3">
+                <i class="fas fa-user-tag d-block mb-2" style="font-size: 1.5rem;"></i>
+                Assign Levels
+              </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+              <button class="btn btn-outline-secondary w-100 py-3" disabled>
+                <i class="fas fa-chart-bar d-block mb-2" style="font-size: 1.5rem;"></i>
+                Reports
+              </button>
+            </div>
+            <div class="col-md-4 col-sm-6">
+              <button class="btn btn-outline-secondary w-100 py-3" disabled>
+                <i class="fas fa-cog d-block mb-2" style="font-size: 1.5rem;"></i>
+                Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0 fw-semibold">
+            <i class="fas fa-info-circle text-info me-2"></i>
+            System Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled mb-0">
+            <li class="mb-3 pb-3 border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Version</span>
+                <span class="badge bg-primary">1.0.0</span>
+              </div>
+            </li>
+            <li class="mb-3 pb-3 border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Environment</span>
+                <span class="badge bg-success">Production</span>
+              </div>
+            </li>
+            <li class="mb-3 pb-3 border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small">Last Login</span>
+                <span class="text-dark small fw-medium">{{ user.last_login|date:"M d, H:i"|default:"Never" }}</span>
+              </div>
+            </li>
+            <li>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small">User ID</span>
+                <span class="text-dark small fw-medium">#{{ user.id }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="card-body p-4 text-center">
+          <i class="fas fa-life-ring fa-3x mb-3 opacity-75"></i>
+          <h6 class="mb-2 text-white">Need Help?</h6>
+          <p class="small mb-3 opacity-75">Contact our support team for assistance</p>
+          <button class="btn btn-light btn-sm rounded-pill px-4">
+            <i class="fas fa-envelope me-2"></i>Contact Support
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<style>
+.dept-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dept-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dept-card .avatar-circle {
+  transition: all 0.3s ease;
+}
+
+.dept-card:hover .avatar-circle {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%) !important;
+  color: white !important;
+}
+</style>
 {% endblock %}

@@ -1,11 +1,39 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Hard Service - Olivia Portal{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h3 class="fw-bold">Hard Service</h3>
-  <div class="card mt-3 shadow">
-    <div class="card-body">
-      <p>Welcome to the Hard Service department!</p>
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-dark fw-bold">
+        <i class="fas fa-tools text-primary me-2"></i>
+        Hard Service
+      </h1>
+      <p class="text-muted mb-0 small">Maintenance and technical services</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">Hard Service</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Welcome Card -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-5 text-center">
+          <div class="avatar-circle bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px; font-size: 36px;">
+            <i class="fas fa-tools"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Welcome to Hard Service Department</h4>
+          <p class="text-muted mb-0">Manage maintenance operations, technical services, and facility repairs.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>

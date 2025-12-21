@@ -23,29 +23,7 @@
         <input placeholder="Search..." id="search" class="form-control shadow-none" type="search">
       </div>
 
-      <div class="btn-group btn-group-sm">
-        <!-- Create Button (Always enabled) -->
-        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#unitModal"
-          id="addNewUnitBtn">
-          <i class="bi bi-plus-circle me-1"></i> Create
-        </button>
-        <!-- Update Button: Uses btn-outline-primary -->
-        <button type="button" class="btn btn-sm btn-outline-primary" id="updateUnitBtn">
-          <i class="bi bi-pencil-square me-1"></i> Update
-        </button>
-        <!-- Delete Button: Uses btn-outline-danger & triggers the modal via data-bs-target -->
-        <button type="button" class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
-          <i class="bi bi-trash me-1"></i> Delete
-        </button>
-        <!-- View Button -->
-        <button id="viewBtn" class="btn btn-sm btn-outline-dark">
-          <i class="bi bi-eye me-1"></i> Import
-        </button>
-        <!-- Export Button -->
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="exportBtn">
-          <i class="bi bi-download me-1"></i> Export
-        </button>
-      </div>
+      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewUnitBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#unitModal"' show_update=True update_id='updateUnitBtn' show_delete=True delete_id='deleteSelectedBtn' show_import=True import_id='importBtn' import_attrs='data-bs-toggle="modal" data-bs-target="#importUnitModal"' show_export=True export_id='exportBtn' %}
 
     </div>
   </div>
@@ -151,5 +129,5 @@
 
 </div>
 
-<script src="{% static 'housing/js/units.js' %}"></script>
+<script src="{% static 'housing/js/units.js' %}?v=20251221b"></script>
 {% endblock %}

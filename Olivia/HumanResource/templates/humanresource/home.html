@@ -1,134 +1,158 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Human Resource - Olivia Portal{% endblock %}
+
 {% block extra_css %}
 <!-- Department Specific CSS -->
 <link href="{% static 'humanresource/css/humanresource.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <!-- Clickable Header -->
-  <h3 class="fw-bold">
-    <a href="{% url 'humanresource_home' %}" class="text-decoration-none text-dark">
-      Human Resource
-    </a>
-  </h3>
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-dark fw-bold">
+        <a href="{% url 'humanresource_home' %}" class="text-decoration-none text-dark hover-primary">
+          <i class="fas fa-users text-primary me-2"></i>
+          Human Resource
+        </a>
+      </h1>
+      <p class="text-muted mb-0 small">Manage staff, leaves, petty cash, and HR operations</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">Human Resource</li>
+      </ol>
+    </nav>
+  </div>
 
-  <!-- Equal Width Tabs -->
-  <ul class="nav hr-tabs nav-fill mt-4">
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_petty_cash' %}active{% endif %}"
-        href="{% url 'hr_petty_cash' %}"><span>Petty Cash</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_leave' %}active{% endif %}"
-        href="{% url 'hr_leave' %}"><span>Leave</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_notice' %}active{% endif %}"
-        href="{% url 'hr_work_notice' %}"><span>Notice</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_clearance' %}active{% endif %}"
-        href="{% url 'hr_clearance' %}"><span>Clearance</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_letters' %}active{% endif %}"
-        href="{% url 'hr_work_letters' %}"><span>Letters</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_medical_declarations' %}active{% endif %}"
-        href="{% url 'hr_medical_declarations' %}"><span>Declarations</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_staff_hiring_evaluation' %}active{% endif %}"
-        href="{% url 'hr_staff_hiring_evaluation' %}"><span>Hiring</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_transfer_request' %}active{% endif %}"
-        href="{% url 'hr_transfer_request' %}"><span>Transfer</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_amendments' %}active{% endif %}"
-        href="{% url 'hr_contract_amendments' %}"><span>Amendments</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_termination' %}active{% endif %}"
-        href="{% url 'hr_contract_termination' %}"><span>Termination</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_monthly_attendance' %}active{% endif %}"
-        href="{% url 'hr_monthly_attendance' %}"><span>Attendance</span></a>
-    </li>
-    <li class="nav-item col-3 col-sm-4 col-md-auto">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_overtime' %}active{% endif %}"
-        href="{% url 'hr_overtime' %}"><span>Overtime</span></a>
-    </li>
-  </ul>
+  <!-- Modern Tabs Navigation -->
+  {% include 'includes/app_tabs.html' with tabs=HR_TABS %}
 
   <!-- Page Content -->
-  <div class="mt-4">
-    {% block hr_content %}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
-      <div class="col-lg-6">
-        <div class="card text-bg-light h-100">
-          <div class="card-header text-bg-dark d-flex justify-content-between align-items-center">
-            <span>Current Balance</span>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateBalanceModal">
-              <i class="bi bi-gear-fill"></i> Update
+  {% block hr_content %}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-semibold">
+              <i class="fas fa-wallet text-success me-2"></i>
+              Current Balance
+            </h5>
+            <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#updateBalanceModal">
+              <i class="fas fa-sync-alt me-2"></i> Update Balance
             </button>
           </div>
-          <div class="card-body">
-            {% if project_balances %}
-            <div class="row">
-              {% for pb in project_balances %}
-              <div class="col-md-6">
-                <div class="card h-100">
-                  <div class="card-body">
-                    <h6 class="card-title fw-semibold mb-1">
-                      {{ pb.name }}
-                    </h6>
-                    <hr>
-                    <div class="row">
-                      <div class="col-6">Opening</div>
-                      <div class="col-6 text-end">{{ pb.opening_balance|floatformat:2 }}</div>
+        </div>
+        <div class="card-body p-4">
+          {% if project_balances %}
+          <div class="row g-4">
+            {% for pb in project_balances %}
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #7488e2 0%, #906eb3 100%);">
+                <div class="card-body text-white p-4">
+                  <h6 class="card-title fw-bold mb-3 pb-3 border-bottom border-light border-opacity-25">
+                    <i class="fas fa-project-diagram me-2"></i>{{ pb.name }}
+                  </h6>
+                  
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="opacity-75">Opening</span>
+                    <span class="fw-semibold">{{ pb.opening_balance|floatformat:2 }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="opacity-75">Replenishment</span>
+                    <span class="fw-semibold">{{ pb.replenishment|floatformat:2 }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="opacity-75">Submitted</span>
+                    <span class="fw-semibold">{{ pb.submitted_nonblank|floatformat:2 }}</span>
+                  </div>
+                  
+                  <div class="pt-3 border-top border-light border-opacity-25">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger fw-medium">
+                        <i class="fas fa-exclamation-circle me-1"></i>Not Submitted
+                      </span>
+                      <span class="text-danger fw-bold">{{ pb.submitted_blank|floatformat:2 }}</span>
                     </div>
-                    <div class="row">
-                      <div class="col-6">Replenishment</div>
-                      <div class="col-6 text-end">{{ pb.replenishment|floatformat:2 }}</div>
-                    </div>
-                    <div class="row">
-                      <div class="col-6">Submitted</div>
-                      <div class="col-6 text-end">{{ pb.submitted_nonblank|floatformat:2 }}</div>
-                    </div>
-                    <br>
-                    <div class="row">
-                      <div class="col-6 text-danger">Not Submitted</div>
-                      <div class="col-6 text-end text-danger">{{ pb.submitted_blank|floatformat:2 }}</div>
-                    </div>
-                    <div class="row">
-                      <div class="col-6 text-success"><strong>Available</strong></div>
-                      <div class="col-6 text-end text-success"><strong>{{ pb.available_balance|floatformat:2 }}</strong>
-                      </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold">
+                        <i class="fas fa-check-circle me-1"></i>Available
+                      </span>
+                      <span class="fs-5 fw-bold">{{ pb.available_balance|floatformat:2 }}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              {% endfor %}
             </div>
-            {% else %}
-            <p>No project balances available.</p>
-            {% endif %}
+            {% endfor %}
           </div>
-
+          {% else %}
+          <div class="text-center py-5">
+            <i class="fas fa-wallet fa-3x text-muted mb-3"></i>
+            <h6 class="text-muted">No project balances available</h6>
+            <p class="text-muted small">Click "Update Balance" to configure project balances</p>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
-    {% endblock %}
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body text-center p-4">
+          <div class="avatar-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 70px; height: 70px; font-size: 32px;">
+            <i class="fas fa-users"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Human Resource</h5>
+          <p class="text-muted small">Manage all HR operations efficiently</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-0 py-3">
+          <h6 class="mb-0 fw-semibold">
+            <i class="fas fa-bolt text-warning me-2"></i>
+            Quick Actions
+          </h6>
+        </div>
+        <div class="card-body p-3">
+          <div class="d-grid gap-2">
+            <a href="{% url 'hr_staff' %}" class="btn btn-outline-primary rounded-pill">
+              <i class="fas fa-user-tie me-2"></i>View Staff
+            </a>
+            <a href="{% url 'hr_leave' %}" class="btn btn-outline-success rounded-pill">
+              <i class="fas fa-calendar-day me-2"></i>Leave Requests
+            </a>
+            <a href="{% url 'hr_hiring' %}" class="btn btn-outline-info rounded-pill">
+              <i class="fas fa-user-plus me-2"></i>New Hiring
+            </a>
+            <a href="{% url 'hr_monthly_attendance' %}" class="btn btn-outline-warning rounded-pill">
+              <i class="fas fa-calendar-check me-2"></i>Attendance
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+  {% endblock %}
+  
   {% include 'humanresource/include/modals/updateBalancemodal.html' %}
 </div>
+
+<style>
+.hover-primary:hover { color: #0d6efd !important; transition: color 0.3s ease; }
+.nav-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.nav-scroll::-webkit-scrollbar { height: 4px; }
+.nav-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+.nav-scroll::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+.nav-scroll::-webkit-scrollbar-thumb:hover { background: #555; }
+</style>
+
 {% block extra_js %}
 <script src="{% static 'humanresource/js/update_balance.js' %}"></script>
 {% endblock %}

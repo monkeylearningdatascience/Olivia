@@ -14,3 +14,9 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Olivia.settings')
 
 application = get_asgi_application()
+
+# Ensure admin auto-registration runs when the ASGI app starts
+try:
+	import admin_autoregister  # noqa: F401
+except Exception:
+	pass

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django_countries.fields import CountryField  
 
 # ====================================================================
 # Auditing Mixin (Recommended for cleaner code)
@@ -69,6 +70,7 @@ class UserCompany(AuditModel): # Inherits AuditModel
     class Meta:
         verbose_name = "User Company"
         verbose_name_plural = "User Companies"
+        ordering = ['company_group']
 
     def __str__(self):
         return self.company_name
@@ -158,3 +160,37 @@ class Unit(AuditModel): # CHANGED: Inherit AuditModel instead of models.Model
 
     def __str__(self):
         return f"{self.unit_number} - {self.unit_location}"
+    
+# ====================================================================
+class HousingUser(models.Model):
+    STATUS_CHOICES = [
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+        ('Pending', 'Pending'),
+    ]
+    RELIGION_CHOICES = [
+        ('Muslim', 'Muslim'),
+        ('Non Muslim', 'Non Muslim'),
+    ]
+
+    username = models.CharField(max_length=100)
+
+    group = models.ForeignKey('CompanyGroup', on_delete=models.SET_NULL, null=True, related_name='users_in_group')
+    company = models.ForeignKey('UserCompany', on_delete=models.SET_NULL, null=True, related_name='users_in_company')
+
+    government_id = models.CharField(max_length=50, blank=True, null=True)
+    id_type = models.CharField(max_length=50, blank=True, null=True)
+    neom_id = models.CharField(max_length=50, blank=True, null=True)
+
+    dob = models.DateField(null=True, blank=True)
+    mobile = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+
+    nationality = CountryField(blank_label='(Select Nationality)', null=True, blank=True)
+
+    religion = models.CharField(max_length=20, choices=RELIGION_CHOICES, blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
+    
+
+    def __str__(self):
+        return self.username

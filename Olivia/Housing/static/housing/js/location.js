@@ -1,3 +1,9 @@
+// Prevent multiple executions
+if (window.locationJsInitialized) {
+    return;
+}
+window.locationJsInitialized = true;
+
 // location.js
 function updateUnitLocation() {
     const area = document.getElementById("area")?.value || "";
@@ -14,17 +20,24 @@ document.addEventListener("DOMContentLoaded", function () {
         input.addEventListener("change", updateUnitLocation);
     });
 
-// ===== Reset modal when opening Add mode =====
-    const addButtons = document.querySelectorAll('[data-bs-target="#unitModal"]');
-    addButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const form = document.getElementById('unitForm');
-            if (form) {
-                form.reset(); // reset all inputs
-                document.getElementById('unit_location').value = ''; // clear location field
-                document.getElementById('unitModalLabel').innerText = 'Add New Room';
-                document.getElementById('unitSubmitBtn').innerHTML = '<i class="bi bi-save me-1"></i> Save';
+    // Reset modal form when opened in Add mode
+    const unitModalElement = document.getElementById('unitModal');
+    if (unitModalElement) {
+        unitModalElement.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            // Only reset for Add mode (not Edit)
+            if (button && !button.classList.contains('edit-btn')) {
+                const form = document.getElementById('unitForm');
+                if (form) {
+                    form.reset();
+                    document.getElementById('unit_location').value = '';
+                    document.getElementById('unitModalLabel').innerText = 'Add New Room';
+                    const submitBtn = document.getElementById('unitSubmitBtn');
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                    }
+                }
             }
         });
-    });
+    }
 });

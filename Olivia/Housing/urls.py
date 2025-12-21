@@ -21,6 +21,21 @@ urlpatterns = [
     path("company/delete/", views.company_delete_view, name="company_delete"),
     path('company/export/', views.export_companies, name='export_companies'),
 
+    # --- User Management URLs ---
+    path('user/', views.users_page, name='user'),
+
+    path('user/create/', views.create_user_api, name='create_user_api'),
+    path('user/update/<int:pk>/', views.user_update_view, name='update_user_api'),
+    path('user/delete/', views.user_delete_view, name='delete_user_api'),
+
+    path('groups/list/', views.list_company_groups_api, name='groups_list_api'),
+    path('companies/list/', views.list_companies_api, name='companies_list_api'),
+
+    path('get_companies/', views.get_companies, name='get_companies'),
+    path("user/export/", views.export_users, name="export_users"),
+
+
     # --- Generic Tab URL (keep last)
     path('<str:tab_name>/', views.housing_tab_view, name="housing_tab"),
+    
 ]

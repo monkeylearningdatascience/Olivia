@@ -1,42 +1,86 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Housing & Tenant - Olivia Portal{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
 <link rel="stylesheet" href="{% static 'housing/css/company.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <!-- Clickable Header -->
-  <h3 class="fw-bold">
-    <a href="{% url 'housing_home' %}" class="text-decoration-none text-dark">
-      Housing & Tenant
-    </a>
-  </h3>
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-dark fw-bold">
+        <a href="{% url 'housing_home' %}" class="text-decoration-none text-dark hover-primary">
+          <i class="fas fa-home text-primary me-2"></i>
+          Housing & Tenant
+        </a>
+      </h1>
+      <p class="text-muted mb-0 small">Manage housing units and tenant information</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">Housing</li>
+      </ol>
+    </nav>
+  </div>
 
-  <!-- Dynamic Tabs -->
-  <ul class="nav hr-tabs nav-fill mt-4">
-    {% for tab in tabs %}
-    <li class="nav-item">
-      <a class="nav-link {% if active_tab == tab.url_name %}active{% endif %}"
-        href="{% url 'housing_tab' tab.url_name %}">
-        <span>{{ tab.name }}</span>
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
+  <!-- Modern Tabs -->
+  {% include 'includes/app_tabs.html' with tabs=tabs base_url='housing_tab' active_tab=active_tab %}
+
+  <!-- Tab Content -->
   {% block hr_content %}
-  <div class="mt-4">
-    <div class="card mt-3 shadow">
-      <div class="card-body">
-        <p>Welcome to the Housing & Tenant department!</p>
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-5 text-center">
+          <div class="avatar-circle bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px; font-size: 36px;">
+            <i class="fas fa-home"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Welcome to Housing & Tenant Department</h4>
+          <p class="text-muted mb-4">Manage housing units, tenant information, check-ins, check-outs, and accommodation services.</p>
+          <div class="row g-3 mt-4">
+            <div class="col-md-3 col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                <h6 class="fw-semibold mb-0">Housing Units</h6>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <i class="fas fa-users fa-2x text-success mb-2"></i>
+                <h6 class="fw-semibold mb-0">Tenants</h6>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <i class="fas fa-sign-in-alt fa-2x text-info mb-2"></i>
+                <h6 class="fw-semibold mb-0">Check-ins</h6>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <i class="fas fa-sign-out-alt fa-2x text-warning mb-2"></i>
+                <h6 class="fw-semibold mb-0">Check-outs</h6>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   {% endblock %}
 </div>
+
+<style>
+.hover-primary:hover { color: #0d6efd !important; transition: color 0.3s ease; }
+</style>
 {% endblock %}
+
 {% block extra_js %}
 <script src="{% static 'housing/js/location.js' %}"></script>
 {% endblock %}

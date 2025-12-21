@@ -10,7 +10,7 @@
 
       <!-- Body -->
       <div class="modal-body">
-        <form id="cashForm" method="POST" enctype="multipart/form-data action="{% url 'hr_petty_cash' %}">
+        <form id="cashForm" method="POST" enctype="multipart/form-data" action="{% url 'hr_petty_cash' %}">
           {% csrf_token %}
           <!-- Hidden ID for edit -->
           <input type="hidden" name="cash_id" id="cash_id">
@@ -109,7 +109,7 @@
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"
               id="cancelBtn">Cancel</button>
             <button type="submit" class="btn btn-success" id="cashSubmitBtn">
-              <i class="bi bi-save me-1"></i> Save
+              <i class="fas fa-save me-1"></i> Save
             </button>
           </div>
         </form>

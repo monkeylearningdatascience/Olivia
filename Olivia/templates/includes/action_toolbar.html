@@ -1,0 +1,62 @@
+{% comment %}
+Reusable Action Toolbar
+Usage:
+{% include 'includes/action_toolbar.html' with 
+   size='sm' 
+   show_create=True create_id='createBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#createModal"'
+   show_view=True view_id='viewBtn' view_attrs=''
+   show_update=True update_id='updateBtn'
+   show_delete=True delete_id='deleteSelectedBtn'
+   show_import=True import_id='importBtn' import_attrs='data-bs-toggle="modal" data-bs-target="#importModal"'
+   show_export=True export_id='exportBtn'
+   show_group=True group_id='groupBtn' group_attrs='data-bs-toggle="modal" data-bs-target="#groupModal"'
+%}
+- size: 'sm' | 'md' | 'lg' (default 'sm')
+- *_attrs: raw HTML attributes string (optional)
+{% endcomment %}
+
+{% with btn_size=size|default:'sm' %}
+<div class="btn-group btn-group-{{ btn_size }} align-items-center">
+  {% if show_create %}
+  <button class="btn btn-{{ btn_size }} btn-outline-success" id="{{ create_id|default:'createBtn' }}" {% if create_attrs %}{{ create_attrs|safe }}{% endif %}>
+    <i class="fas fa-plus-circle me-1"></i> Create
+  </button>
+  {% endif %}
+
+  {% if show_view %}
+  <button class="btn btn-{{ btn_size }} btn-outline-dark" id="{{ view_id|default:'viewBtn' }}" {% if view_attrs %}{{ view_attrs|safe }}{% endif %}>
+    <i class="fas fa-eye me-1"></i> View
+  </button>
+  {% endif %}
+
+  {% if show_update %}
+  <button class="btn btn-{{ btn_size }} btn-outline-primary" id="{{ update_id|default:'updateBtn' }}" {% if update_attrs %}{{ update_attrs|safe }}{% endif %}>
+    <i class="fas fa-edit me-1"></i> Update
+  </button>
+  {% endif %}
+
+  {% if show_delete %}
+  <button class="btn btn-{{ btn_size }} btn-outline-danger" id="{{ delete_id|default:'deleteSelectedBtn' }}" {% if delete_attrs %}{{ delete_attrs|safe }}{% endif %}>
+    <i class="fas fa-trash me-1"></i> Delete
+  </button>
+  {% endif %}
+
+  {% if show_import %}
+  <button class="btn btn-{{ btn_size }} btn-outline-info" id="{{ import_id|default:'importBtn' }}" {% if import_attrs %}{{ import_attrs|safe }}{% endif %}>
+    <i class="fas fa-upload me-1"></i> Import
+  </button>
+  {% endif %}
+
+  {% if show_export %}
+  <button class="btn btn-{{ btn_size }} btn-outline-secondary" id="{{ export_id|default:'exportBtn' }}" {% if export_attrs %}{{ export_attrs|safe }}{% endif %}>
+    <i class="fas fa-download me-1"></i> Export
+  </button>
+  {% endif %}
+
+  {% if show_group %}
+  <button class="btn btn-{{ btn_size }} btn-outline-dark" id="{{ group_id|default:'groupBtn' }}" {% if group_attrs %}{{ group_attrs|safe }}{% endif %}>
+    <i class="fas fa-users me-1"></i> Group
+  </button>
+  {% endif %}
+</div>
+{% endwith %}

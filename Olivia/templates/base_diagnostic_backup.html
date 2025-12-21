@@ -1,0 +1,443 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Olivia Portal{% endblock %}</title>
+
+  <link rel="shortcut icon" href="https://mag-sa.com/wp-content/themes/mag/dist/images/favicon.png" type="image/x-icon">
+
+  <!-- Bootstrap 5.3.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome 6.5.0 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Google Font: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Global CSS -->
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+  <!-- Page/Department Specific CSS -->
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm">
+    <div class="container-fluid px-4">
+      <!-- Brand with Icon -->
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+        <i class="fas fa-building me-2"></i>
+        <span class="fw-bold">Olivia Portal</span>
+      </a>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="btn btn-outline-light d-lg-none" type="button" data-bs-toggle="offcanvas"
+        data-bs-target="#offcanvasSidebar" aria-label="Toggle navigation">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <!-- Desktop Right Section -->
+      <div class="d-none d-lg-flex align-items-center ms-auto gap-3">
+        <!-- User Info -->
+        {% if user.is_authenticated %}
+        <div class="dropdown">
+          <button class="btn btn-link text-white text-decoration-none dropdown-toggle d-flex align-items-center" 
+                  type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="avatar-circle bg-primary text-white me-2" style="width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;">
+              {{ user.get_full_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+            </div>
+            <span class="fw-medium">{{ user.get_full_name|default:user.username }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+        {% else %}
+        <a class="btn btn-outline-light rounded-pill px-4" href="{% url 'login' %}">
+          <i class="fas fa-sign-in-alt me-2"></i>Login
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Layout -->
+  <div class="layout" style="margin-top:56px;">
+
+    <!-- Desktop Sidebar -->
+    <nav class="sidebar d-none d-lg-block shadow-sm">
+      <div class="sidebar-header px-3 py-3 mb-2">
+        <h6 class="text-white-50 text-uppercase mb-0 small fw-semibold">
+          <i class="fas fa-th-large me-2"></i>Departments
+        </h6>
+      </div>
+      <ul class="px-2">
+        {% for dept in departments %}
+        <li>
+          <a class="nav-link {% if request.path == dept.url %}active{% endif %}" href="{{ dept.url }}">
+            <i class="{{ dept.icon }}"></i>
+            <span>{{ dept.name }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <!-- Mobile Sidebar (Offcanvas) -->
+    <div class="offcanvas offcanvas-start bg-dark text-white d-lg-none" tabindex="-1" id="offcanvasSidebar">
+      <div class="offcanvas-header border-bottom border-secondary">
+        <h5 class="offcanvas-title fw-bold">
+          <i class="fas fa-th-large me-2"></i>Departments
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body p-2">
+        <ul class="nav nav-pills flex-column">
+          {% for dept in departments %}
+          <li class="nav-item mb-1">
+            <a class="nav-link text-white {% if request.path == dept.url %}active{% endif %}" href="{{ dept.url }}">
+              <i class="{{ dept.icon }} me-2"></i>
+              <span>{{ dept.name }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        
+        <!-- Mobile User Section -->
+        {% if user.is_authenticated %}
+        <div class="mt-auto pt-3 border-top border-secondary">
+          <div class="d-flex align-items-center mb-3 px-3">
+            <div class="avatar-circle bg-primary text-white me-2" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+              {{ user.get_full_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+            </div>
+            <div>
+              <div class="text-white fw-medium small">{{ user.get_full_name|default:user.username }}</div>
+              <div class="text-white-50 small">{{ user.email }}</div>
+            </div>
+          </div>
+          <a class="btn btn-outline-light w-100 rounded-pill" href="{% url 'logout' %}">
+            <i class="fas fa-sign-out-alt me-2"></i>Logout
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Messages/Alerts -->
+      {% if messages %}
+      <div class="container-fluid px-4 pt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+          <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Page Content -->
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Global JavaScript -->
+  <script>
+    // === PREVENT MULTIPLE SCRIPT EXECUTIONS ===
+    if (window.OLIVIA_INITIALIZED) {
+      console.error('❌❌❌ CRITICAL: Scripts loading multiple times! This causes event handlers to multiply!');
+    } else {
+      window.OLIVIA_INITIALIZED = true;
+      console.log('✅ First script load - OK');
+    }
+    
+    // === CRITICAL: DETECT DUPLICATE MODAL ELEMENTS ===
+    (function() {
+      window.addEventListener('DOMContentLoaded', function() {
+        console.log('=== MODAL DIAGNOSTICS ===');
+        
+        // Check for duplicate IDs
+        const modalIds = ['cashModal', 'deleteConfirmModal', 'attachmentModal', 'updateSelectionModal'];
+        modalIds.forEach(id => {
+          const elements = document.querySelectorAll(`#${id}`);
+          if (elements.length > 1) {
+            console.error(`❌ DUPLICATE MODAL FOUND: #${id} appears ${elements.length} times!`);
+            elements.forEach((el, idx) => {
+              console.log(`  Instance ${idx + 1}:`, el);
+            });
+          } else if (elements.length === 1) {
+            console.log(`✅ #${id} - OK (single instance)`);
+          }
+        });
+        
+        // Check for all modals
+        const allModals = document.querySelectorAll('.modal');
+        console.log(`Total .modal elements: ${allModals.length}`);
+        
+        // Check for buttons with data-bs-toggle
+        const triggers = document.querySelectorAll('[data-bs-toggle="modal"]');
+        console.log(`Total modal triggers: ${triggers.length}`);
+        triggers.forEach(t => {
+          console.log(`  Trigger: ${t.tagName} target="${t.getAttribute('data-bs-target')}"`);
+        });
+        
+        console.log('=== END DIAGNOSTICS ===');
+        
+        // === PERSISTENT LISTENER TRACKING (GLOBAL) ===
+        if (!window.modalListenerTracking) {
+          window.modalListenerTracking = {};
+          window.modalEventSequence = [];
+          window.modalOpenCount = 0;
+          
+          const modals = document.querySelectorAll('.modal');
+          modals.forEach(modal => {
+            const id = modal.id || 'unnamed';
+            
+            // Initialize tracking for this modal
+            window.modalListenerTracking[id] = {
+              show: 0,
+              shown: 0,
+              hide: 0,
+              hidden: 0,
+              lastOpen: 0
+            };
+            
+            ['show.bs.modal', 'shown.bs.modal', 'hide.bs.modal', 'hidden.bs.modal'].forEach(eventName => {
+              const eventShort = eventName.split('.')[0];
+              
+              modal.addEventListener(eventName, function(e) {
+                // Increment this event count
+                window.modalListenerTracking[id][eventShort]++;
+                const count = window.modalListenerTracking[id][eventShort];
+                
+                // Track sequence
+                window.modalEventSequence.push(`${id}:${eventShort}=${count}`);
+                
+                console.log(`[EVENT FIRE] #${id}:${eventShort} [LISTENER COUNT: ${count}]`);
+                
+                // If same event fires 3+ times for single open, it's a problem
+                if (eventShort === 'show' && count > 1) {
+                  console.error(`❌ #${id} show event fired MULTIPLE times! Count=${count}`);
+                }
+                
+                // Keep last 100 events
+                if (window.modalEventSequence.length > 100) {
+                  window.modalEventSequence.shift();
+                }
+              });
+            });
+          });
+          
+          console.log('✅ Global listener tracking initialized');
+        }
+        
+        // === DETECT LISTENER EXPLOSION ===
+        document.addEventListener('click', function(e) {
+          if (e.target.matches('[data-bs-toggle="modal"]') || e.target.closest('[data-bs-toggle="modal"]')) {
+            window.modalOpenCount++;
+            const btn = e.target.matches('[data-bs-toggle="modal"]') ? e.target : e.target.closest('[data-bs-toggle="modal"]');
+            const target = btn.getAttribute('data-bs-target') || btn.getAttribute('href');
+            console.log(`\n📍 MODAL OPEN #${window.modalOpenCount}: ${target}`);
+            
+            // Check listener counts
+            setTimeout(() => {
+              const tracking = window.modalListenerTracking[target.replace('#', '')];
+              if (tracking) {
+                console.log(`📊 Listener counts for ${target}: show=${tracking.show}, shown=${tracking.shown}, hide=${tracking.hide}, hidden=${tracking.hidden}`);
+              }
+            }, 100);
+          }
+        }, true);
+        
+        // Track click events on modal buttons
+        document.addEventListener('click', function(e) {
+          if (e.target.matches('.modal button, .modal .btn')) {
+            console.log(`[CLICK] Modal button: ${e.target.textContent.trim()} (class: ${e.target.className})`);
+          }
+        }, true);
+      });
+    })();
+    
+    // === MODAL PROTECTION ===
+    (function() {
+      if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+      
+      const OriginalModal = bootstrap.Modal;
+      const originalShow = OriginalModal.prototype.show;
+      const originalHide = OriginalModal.prototype.hide;
+      
+      const instanceRegistry = new WeakMap();
+      const showCallTimestamps = new WeakMap();
+      let instanceCounter = 0;
+      
+      // Override constructor
+      bootstrap.Modal = function(element, config) {
+        if (!element) return new OriginalModal(element, config);
+        
+        const elementId = element.id || 'unnamed-modal';
+        
+        // Check for existing instance
+        if (instanceRegistry.has(element)) {
+          console.warn(`[MODAL #${instanceCounter}] ❌ BLOCKED duplicate instance for: ${elementId}`);
+          console.trace('Call stack:');
+          return instanceRegistry.get(element);
+        }
+        
+        // Create new instance
+        instanceCounter++;
+        console.log(`[MODAL #${instanceCounter}] ✅ Creating new instance for: ${elementId}`);
+        const instance = new OriginalModal(element, config);
+        instanceRegistry.set(element, instance);
+        return instance;
+      };
+      
+      // Override show()
+      bootstrap.Modal.prototype.show = function() {
+        const element = this._element;
+        if (!element) return originalShow.apply(this, arguments);
+        
+        const elementId = element.id || 'unnamed-modal';
+        
+        // Block if already visible
+        if (element.classList.contains('show')) {
+          console.warn(`[MODAL] ❌ BLOCKED show() - already visible: ${elementId}`);
+          return;
+        }
+        
+        // Debounce rapid calls
+        const now = Date.now();
+        const lastCall = showCallTimestamps.get(element) || 0;
+        if (now - lastCall < 100) {
+          console.warn(`[MODAL] ❌ BLOCKED show() - debounced (${now - lastCall}ms): ${elementId}`);
+          return;
+        }
+        
+        showCallTimestamps.set(element, now);
+        console.log(`[MODAL] ✅ Showing: ${elementId}`);
+        return originalShow.apply(this, arguments);
+      };
+      
+      // Override hide()
+      bootstrap.Modal.prototype.hide = function() {
+        const elementId = this._element?.id || 'unnamed-modal';
+        console.log(`[MODAL] 🚫 Hiding: ${elementId}`);
+        return originalHide.apply(this, arguments);
+      };
+      
+      // Copy static properties
+      Object.setPrototypeOf(bootstrap.Modal, OriginalModal);
+      Object.keys(OriginalModal).forEach(key => {
+        if (typeof OriginalModal[key] !== 'undefined') {
+          bootstrap.Modal[key] = OriginalModal[key];
+        }
+      });
+      
+      console.log('[MODAL] 🛡️ Diagnostic protection active');
+    })();
+    
+    // === MODAL BACKDROP CLEANER ===
+    // Remove duplicate/stuck modal backdrops that cause flickering
+    (function() {
+      let isCleaningUp = false;
+      let cleanupTimeout = null;
+      
+      // Aggressive cleanup on any backdrop mutation
+      const backdropObserver = new MutationObserver(function(mutations) {
+        if (isCleaningUp) return;
+        
+        // Clear any pending cleanup
+        if (cleanupTimeout) clearTimeout(cleanupTimeout);
+        
+        // Wait 150ms for modal to finish showing before checking
+        cleanupTimeout = setTimeout(function() {
+          const backdrops = document.querySelectorAll('.modal-backdrop');
+          const openModals = document.querySelectorAll('.modal.show').length;
+          
+          // Check for modals in transition (opening but not .show yet)
+          const transitioningModals = document.querySelectorAll('.modal[style*="display: block"]:not(.show)').length;
+          const totalModals = openModals + transitioningModals;
+          
+          if (backdrops.length > 0 && totalModals === 0) {
+            console.warn('[BACKDROP] ⚡ Removing orphaned backdrop (no open modals)');
+            isCleaningUp = true;
+            backdrops.forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            setTimeout(() => isCleaningUp = false, 50);
+          } else if (backdrops.length > totalModals && totalModals > 0) {
+            console.warn(`[BACKDROP] ⚡ Removing ${backdrops.length - totalModals} extra backdrop(s)`);
+            isCleaningUp = true;
+            for (let i = totalModals; i < backdrops.length; i++) {
+              backdrops[i].remove();
+            }
+            setTimeout(() => isCleaningUp = false, 50);
+          }
+        }, 150); // Give modal time to finish showing
+      });
+      
+      // Watch for backdrop elements being added to body
+      backdropObserver.observe(document.body, {
+        childList: true,
+        subtree: false
+      });
+      
+      // Initial cleanup
+      function cleanupModalBackdrops() {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        const openModals = document.querySelectorAll('.modal.show').length;
+        
+        if (backdrops.length > openModals && openModals === 0) {
+          console.log(`[BACKDROP] 🧹 Initial cleanup: removing ${backdrops.length} orphaned backdrop(s)`);
+          backdrops.forEach(b => b.remove());
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+        }
+      }
+      
+      window.addEventListener('DOMContentLoaded', cleanupModalBackdrops);
+      window.cleanupModalBackdrops = cleanupModalBackdrops;
+      
+      console.log('[BACKDROP] 🛡️ Aggressive cleaner active');
+    })();
+    
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+      alerts.forEach(function(alert) {
+        setTimeout(function() {
+          const bsAlert = new bootstrap.Alert(alert);
+          bsAlert.close();
+        }, 5000);
+      });
+    });
+
+    // Smooth scroll behavior
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+  
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

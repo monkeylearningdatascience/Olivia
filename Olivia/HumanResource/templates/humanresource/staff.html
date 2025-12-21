@@ -1,0 +1,83 @@
+{% extends "humanresource/home.html" %}
+{% load static %}
+
+{% block hr_content %}
+<div class="card shadow-lg border-0 rounded-3 mt-4">
+
+  <!-- Card Header -->
+  <div class="card-header bg-white border-0 px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <h3 class="fw-semibold mb-0" style="font-family: 'Poppins', sans-serif;">
+        Staff
+      </h3>
+
+      <div class="search-box mx-3">
+        <input placeholder="Search..." id="search" class="form-control shadow-none" type="search">
+      </div>
+
+      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewStaffBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#staffModal"' show_update=True update_id='updateStaffBtn' show_delete=True delete_id='deleteSelectedBtn' show_import=True import_id='importBtn' import_attrs='data-bs-toggle="modal" data-bs-target="#importStaffModal"' show_export=True export_id='exportBtn' %}
+
+    </div>
+  </div>
+  <hr class="no-margin-hr">
+
+  <!-- Table -->
+  <div class="card-body px-4 py-3">
+    <div class="table-responsive">
+      <table id="staffTable" class="table table-sm align-middle table-hover mb-0" style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+        <thead class="table-light text-muted">
+          <tr>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>Staff ID</th>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Department</th>
+            <th>Nationality</th>
+            <th>Gender</th>
+            <th>Start Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="staffTableBody">
+          {% for e in staff_entries %}
+          <tr data-id="{{ e.id }}" class="{% if forloop.first %}table-success new-entry{% endif %}">
+            <td><input type="checkbox" class="select-entry" value="{{ e.id }}"></td>
+            <td>{{ e.staffid }}</td>
+            <td>{{ e.full_name }}</td>
+            <td>{{ e.position }}</td>
+            <td>{{ e.department }}</td>
+            <td>{% if e.nationality %}{{ e.nationality.name }}{% endif %}</td>
+            <td>{{ e.gender }}</td>
+            <td>{% if e.start_date %}{{ e.start_date|date:'F j, Y' }}{% endif %}</td>
+            <td>{{ e.employment_status }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center text-muted">No staff records found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer (pagination omitted for brevity) -->
+  <div class="card-footer bg-white border-0 rounded-3 py-3 px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center small text-muted">
+        <span class="me-3">Showing {{ staff_entries.start_index }} to {{ staff_entries.end_index }} of {{ staff_entries.paginator.count }} entries</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include Modals -->
+  {% include 'humanresource/include/modals/delete_modal.html' %}
+  {% include 'humanresource/include/modals/staff_modal.html' %}
+  {% include 'humanresource/include/modals/importStaffModal.html' %}
+  {% include 'humanresource/include/modals/view_selection_modal.html' %}
+
+</div>
+
+<script src="{% static 'humanresource/js/staff.js' %}?v=20251221b"></script>
+{% endblock %}

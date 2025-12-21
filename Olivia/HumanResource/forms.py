@@ -1,5 +1,6 @@
 from django import forms
-from .models import Cash
+from .models import Cash, Employee
+from django_countries.widgets import CountrySelectWidget
 import datetime
 
 class CashForm(forms.ModelForm):
@@ -36,4 +37,35 @@ class CashForm(forms.ModelForm):
     #     if commit:
     #         instance.save()
     #     return instance
+
+
+class EmployeeForm(forms.ModelForm):
+    class Meta:
+        model = Employee
+        fields = '__all__'
+        exclude = ('documents',)  # Keep documents excluded; include photo so uploads are handled by the form
+        widgets = {
+            'staffid': forms.TextInput(attrs={'class': 'form-control'}),
+            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.TextInput(attrs={'class': 'form-control'}),
+            'nationality': CountrySelectWidget(attrs={'class': 'form-select'}),
+            'photo_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'iqama_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'passport_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-select'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'photo_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'employment_status': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ensure required fields are set properly
+        self.fields['staffid'].required = True
+        self.fields['full_name'].required = True
+        self.fields['department'].required = True
 

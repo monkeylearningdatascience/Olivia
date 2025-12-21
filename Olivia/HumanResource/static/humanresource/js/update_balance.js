@@ -1,5 +1,4 @@
-console.log("✅ update_balance.js loaded");
-
+// Prevent double execution
 if (typeof window.updateBalanceInit === 'undefined') {
     window.updateBalanceInit = true;
 
@@ -26,7 +25,7 @@ if (typeof window.updateBalanceInit === 'undefined') {
         document.getElementById('update_activity').value = activity;
         document.getElementById('update_project_name').value = projectName;
 
-        const modal = new bootstrap.Modal(document.getElementById('updateBalanceModal'));
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('updateBalanceModal'));
         modal.show();
     }
 

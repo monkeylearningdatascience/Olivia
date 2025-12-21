@@ -4,12 +4,13 @@ from django.shortcuts import render
 # HR Tabs
 HR_TABS = [
     {"name": "Petty Cash", "url_name": "hr_petty_cash"},
+    {"name": "Staff", "url_name": "hr_staff"},
     {"name": "Leave", "url_name": "hr_leave"},
     {"name": "Notice", "url_name": "hr_work_notice"},
     {"name": "Clearance", "url_name": "hr_clearance"},
     {"name": "Letters", "url_name": "hr_work_letters"},
     {"name": "Declarations", "url_name": "hr_medical_declarations"},
-    {"name": "Hiring", "url_name": "hr_staff_hiring_evaluation"},
+    {"name": "Hiring", "url_name": "hr_hiring"},
     {"name": "Transfer", "url_name": "hr_transfer_request"},
     {"name": "Amendments", "url_name": "hr_contract_amendments"},
     {"name": "Termination", "url_name": "hr_contract_termination"},

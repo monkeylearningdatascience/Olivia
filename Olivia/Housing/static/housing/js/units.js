@@ -1,31 +1,28 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // Modal References
+    // ===== MODAL INITIALIZATION - ALL USE getOrCreateInstance() =====
     const unitModalElement = document.getElementById("unitModal");
-    const unitModal = unitModalElement ? new bootstrap.Modal(unitModalElement) : null;
     const unitForm = document.getElementById("unitForm");
     const unitModalLabel = document.getElementById("unitModalLabel");
 
-    // Import Modal References
     const importUnitModalElement = document.getElementById("importUnitModal");
-    const importUnitModal = importUnitModalElement ? new bootstrap.Modal(importUnitModalElement) : null;
     const importUnitForm = document.getElementById("importUnitForm");
     const importSubmitBtn = document.getElementById("importSubmitBtn");
     const importLoadingIndicator = document.getElementById("importLoadingIndicator");
 
-    // =========================================================================
-    // Selection Error Modal References (ADAPTED TO REUSE viewSelectionModal HTML)
-    // =========================================================================
-    // Use the actual IDs from the provided modal HTML
     const selectionErrorModalElement = document.getElementById("viewSelectionModal");
-    const selectionErrorModal = selectionErrorModalElement ? new bootstrap.Modal(selectionErrorModalElement) : null;
-
-    // Get the dynamic elements we need to change content
     const selectionErrorModalLabel = document.getElementById("viewSelectionModalLabel");
     const selectionErrorModalBody = selectionErrorModalElement ? selectionErrorModalElement.querySelector(".modal-body") : null;
     const selectionErrorModalHeader = selectionErrorModalElement ? selectionErrorModalElement.querySelector(".modal-header") : null;
     const selectionErrorModalOkBtn = selectionErrorModalElement ? selectionErrorModalElement.querySelector(".modal-footer .btn") : null;
-    // =========================================================================
 
+    const deleteConfirmModalElement = document.getElementById("deleteConfirmModal");
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+
+    // Helper functions to get/create modal instances (prevents duplicates)
+    const getUnitModal = () => unitModalElement ? bootstrap.Modal.getOrCreateInstance(unitModalElement) : null;
+    const getImportUnitModal = () => importUnitModalElement ? bootstrap.Modal.getOrCreateInstance(importUnitModalElement) : null;
+    const getSelectionErrorModal = () => selectionErrorModalElement ? bootstrap.Modal.getOrCreateInstance(selectionErrorModalElement) : null;
+    const getDeleteConfirmModal = () => deleteConfirmModalElement ? bootstrap.Modal.getOrCreateInstance(deleteConfirmModalElement) : null;
 
     // Table/Selection References
     const selectAll = document.getElementById("selectAll");
@@ -42,11 +39,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const searchInput = document.getElementById("search");
     let searchTimeout = null;
 
-    // Delete Modal elements
-    const deleteConfirmModalElement = document.getElementById("deleteConfirmModal");
-    const deleteConfirmModal = deleteConfirmModalElement ? new bootstrap.Modal(deleteConfirmModalElement) : null;
-    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
-
     let selectedUnitIds = []; // Stores IDs for update or delete
 
     // Helper to get CSRF token
@@ -57,7 +49,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // HELPER FUNCTION: DYNAMIC SELECTION MODAL (REUSING PETTY CASH LOGIC/HTML)
     // =======================================================
     function showSelectionErrorModal(action, customBodyText = '') {
-        if (!selectionErrorModal) {
+        const modal = getSelectionErrorModal();
+        if (!modal) {
             console.error("Error: Selection Modal (ID: viewSelectionModal) not found in the DOM.");
             return;
         }
@@ -118,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
             selectionErrorModalOkBtn.classList.add(btnClass);
         }
 
-        selectionErrorModal.show();
+        modal.show();
     }
 
 
@@ -259,9 +252,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // IV. CREATE MODE SETUP
     // =======================================================
 
-    if (addNewUnitBtn && unitModal) {
+    if (addNewUnitBtn) {
         addNewUnitBtn.addEventListener('click', () => {
-            unitModal.show();
+            const modal = getUnitModal();
+            if (modal) modal.show();
         });
     }
 
@@ -269,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // =======================================================
     // V. UPDATE MODE SETUP (FETCH & POPULATE)
     // =======================================================
-    if (updateUnitBtn && unitModal) {
+    if (updateUnitBtn) {
         updateUnitBtn.addEventListener('click', async (e) => {
             if (selectedUnitIds.length !== 1) {
                 e.preventDefault();
@@ -335,7 +329,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 recalculateLocationForDisplay();
 
                 // 6. Show the modal
-                unitModal.show();
+                const modal = getUnitModal();
+                if (modal) modal.show();
 
             } catch (error) {
                 console.error("Critical Error during Unit Update Setup:", error);
@@ -363,7 +358,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        if (unitModal) unitModal.hide();
+                        const modal = getUnitModal();
+                        if (modal) modal.hide();
                         unitForm.reset();
                         window.location.reload();
                     } else {
@@ -382,12 +378,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // =======================================================
 
     // 1. Open Import Modal when Import button is clicked
-    if (importBtn && importUnitModal) {
+    if (importBtn) {
         importBtn.addEventListener('click', () => {
-            if (importLoadingIndicator) importLoadingIndicator.classList.add('d-none');
-            if (importSubmitBtn) importSubmitBtn.removeAttribute('disabled');
-            importUnitForm.reset();
-            importUnitModal.show();
+            const modal = getImportUnitModal();
+            if (modal) {
+                if (importLoadingIndicator) importLoadingIndicator.classList.add('d-none');
+                if (importSubmitBtn) importSubmitBtn.removeAttribute('disabled');
+                importUnitForm.reset();
+                modal.show();
+            }
         });
     }
 
@@ -411,7 +410,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (importSubmitBtn) importSubmitBtn.removeAttribute('disabled');
                     
                     // Hide the file upload modal
-                    if (importUnitModal) importUnitModal.hide();
+                    const importModal = getImportUnitModal();
+                    if (importModal) importModal.hide();
 
                     if (data.success) {
                         // SUCCESS: Show the results in the modal
@@ -436,7 +436,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     // NETWORK ERROR: Show the network error in the modal
                     if (importLoadingIndicator) importLoadingIndicator.classList.add('d-none');
                     if (importSubmitBtn) importSubmitBtn.removeAttribute('disabled');
-                    if (importUnitModal) importUnitModal.hide();
+                    const importModal = getImportUnitModal();
+                    if (importModal) importModal.hide();
 
                     console.error("Import AJAX Error:", err);
                     const errorMsg = "A network error occurred during import. Check the console for details.";
@@ -450,7 +451,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // =======================================================
 
     // Open Modal when "Delete Selected" is clicked
-    if (deleteBtn && deleteConfirmModal) {
+    if (deleteBtn) {
         deleteBtn.addEventListener("click", function (e) {
             // These lines are CRITICAL and correct to prevent double modals.
             e.preventDefault();
@@ -461,7 +462,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 showSelectionErrorModal('delete'); // This shows "Please select at least one room to delete."
             } else {
                 // Case 2: Items are selected (Show Confirmation Modal: delete_modal)
-                deleteConfirmModal.show(); // This shows "Are you sure you want to delete..."
+                const modal = getDeleteConfirmModal();
+                if (modal) modal.show();
             }
         });
     }
@@ -471,7 +473,8 @@ document.addEventListener("DOMContentLoaded", function () {
         confirmDeleteBtn.addEventListener("click", function () {
             if (!selectedUnitIds.length) return;
 
-            deleteConfirmModal.hide();
+            const modal = getDeleteConfirmModal();
+            if (modal) modal.hide();
 
             fetch("/housing/units/delete/", {
                 method: "POST",

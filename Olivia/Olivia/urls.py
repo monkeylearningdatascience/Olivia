@@ -49,6 +49,7 @@ urlpatterns = [
     path('tickets/', include('Tickets.urls')),
     path('training/', include('Training.urls')),
     path('housing/', include('Housing.urls')),
+    
 ]
 # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

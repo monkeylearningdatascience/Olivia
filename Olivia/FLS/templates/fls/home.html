@@ -1,11 +1,39 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Fire Life & Safety - Olivia Portal{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h3 class="fw-bold">Fire Life & Safety</h3>
-  <div class="card mt-3 shadow">
-    <div class="card-body">
-      <p>Welcome to the Fire Life & Safety department!</p>
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-dark fw-bold">
+        <i class="fas fa-fire-extinguisher text-danger me-2"></i>
+        Fire Life & Safety
+      </h1>
+      <p class="text-muted mb-0 small">Fire safety and emergency response management</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">FLS</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Welcome Card -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-5 text-center">
+          <div class="avatar-circle bg-danger bg-opacity-10 text-danger mx-auto mb-4" style="width: 80px; height: 80px; font-size: 36px;">
+            <i class="fas fa-fire-extinguisher"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Welcome to Fire Life & Safety Department</h4>
+          <p class="text-muted mb-0">Manage fire safety systems, emergency response, and life safety operations.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>

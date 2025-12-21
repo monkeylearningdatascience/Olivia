@@ -1,39 +1,88 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}QHSE - Olivia Portal{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3 class="fw-bold">
-        <a href="{% url 'qhse_home' %}" class="text-decoration-none text-dark">
-            QHSE
-        </a>
-    </h3>
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-dark fw-bold">
+                <a href="{% url 'qhse_home' %}" class="text-decoration-none text-dark hover-primary">
+                    <i class="fas fa-shield-alt text-success me-2"></i>
+                    QHSE
+                </a>
+            </h1>
+            <p class="text-muted mb-0 small">Quality, Health, Safety, and Environment</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item active">QHSE</li>
+            </ol>
+        </nav>
+    </div>
 
-    <ul class="nav hr-tabs nav-fill mt-4">
-        {% for tab in tabs %}
-        <li class="nav-item">
-            <a class="nav-link {% if active_tab == tab.url_name %}active{% endif %}"
-                href="{% url 'qhse_tab' tab_name=tab.url_name %}">
-                {{ tab.name }}
-            </a>
-        </li>
-        {% endfor %}
-    </ul>
+    <!-- Modern Tabs -->
+    {% include 'includes/app_tabs.html' with tabs=tabs base_url='qhse_tab' active_tab=active_tab %}
 
+    <!-- Tab Content -->
     {% block qhse_content %}
-    <div class="mt-4">
-        <div class="card mt-3 shadow">
-            <div class="card-body">
-                <p>Welcome to the **Quality, Health, Safety, and Environment (QHSE)** department!</p>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body p-5 text-center">
+                    <div class="avatar-circle bg-success bg-opacity-10 text-success mx-auto mb-4" style="width: 80px; height: 80px; font-size: 36px;">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Welcome to QHSE Department</h4>
+                    <p class="text-muted mb-4">Quality, Health, Safety, and Environment management system.</p>
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <i class="fas fa-medal fa-2x text-primary mb-2"></i>
+                                <h6 class="fw-semibold mb-0 small">Quality</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <i class="fas fa-heartbeat fa-2x text-danger mb-2"></i>
+                                <h6 class="fw-semibold mb-0 small">Health</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <i class="fas fa-hard-hat fa-2x text-warning mb-2"></i>
+                                <h6 class="fw-semibold mb-0 small">Safety</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <i class="fas fa-leaf fa-2x text-success mb-2"></i>
+                                <h6 class="fw-semibold mb-0 small">Environment</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     {% endblock %}
 </div>
+
+<style>
+.hover-primary:hover { color: #0d6efd !important; transition: color 0.3s ease; }
+.nav-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.nav-scroll::-webkit-scrollbar { height: 4px; }
+.nav-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+.nav-scroll::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+.nav-scroll::-webkit-scrollbar-thumb:hover { background: #555; }
+</style>
 {% endblock %}
 
 {% block extra_js %}

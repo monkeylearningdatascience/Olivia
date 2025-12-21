@@ -1,75 +1,40 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
-{% endblock %}
+{% block title %}Warehouse - Olivia Portal{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h3 class="fw-bold">Warehouse</h3>
+<div class="container-fluid px-4 py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-dark fw-bold">
+        <i class="fas fa-warehouse text-primary me-2"></i>
+        Warehouse
+      </h1>
+      <p class="text-muted mb-0 small">Inventory and warehouse management</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">Warehouse</li>
+      </ol>
+    </nav>
+  </div>
 
-    <!-- Equal Width Tabs -->
-  <ul class="nav hr-tabs nav-fill mt-4">
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_petty_cash' %}active{% endif %}"
-        href="{% url 'hr_petty_cash' %}"><span>Petty Cash</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_leave' %}active{% endif %}"
-        href="{% url 'hr_leave' %}"><span>Leave</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_notice' %}active{% endif %}"
-        href="{% url 'hr_work_notice' %}"><span>Notice</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_clearance' %}active{% endif %}"
-        href="{% url 'hr_clearance' %}"><span>Clearance</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_work_letters' %}active{% endif %}"
-        href="{% url 'hr_work_letters' %}"><span>Letters</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_medical_declarations' %}active{% endif %}"
-        href="{% url 'hr_medical_declarations' %}"><span>Declarations</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_staff_hiring_evaluation' %}active{% endif %}"
-        href="{% url 'hr_staff_hiring_evaluation' %}"><span>Hiring</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_transfer_request' %}active{% endif %}"
-        href="{% url 'hr_transfer_request' %}"><span>Transfer</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_amendments' %}active{% endif %}"
-        href="{% url 'hr_contract_amendments' %}"><span>Amendments</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_contract_termination' %}active{% endif %}"
-        href="{% url 'hr_contract_termination' %}"><span>Termination</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_monthly_attendance' %}active{% endif %}"
-        href="{% url 'hr_monthly_attendance' %}"><span>Attendance</span></a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'hr_overtime' %}active{% endif %}"
-        href="{% url 'hr_overtime' %}"><span>Overtime</span></a>
-    </li>
-  </ul>
-  
-  <!-- Page Content -->
-  <div class="mt-4">
-    {% block hr_content %}
-    <div class="card mt-3 shadow">
-      <div class="card-body">
-        <p class="text-muted">Welcome to the Human Resource Department!</p>
+  <!-- Welcome Card -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-5 text-center">
+          <div class="avatar-circle bg-primary bg-opacity-10 text-primary mx-auto mb-4" style="width: 80px; height: 80px; font-size: 36px;">
+            <i class="fas fa-warehouse"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Welcome to Warehouse Department</h4>
+          <p class="text-muted mb-0">Manage inventory, stock levels, and warehouse operations.</p>
+        </div>
       </div>
     </div>
-    {% endblock %}
   </div>
 </div>
 {% endblock %}

@@ -10,10 +10,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.db import IntegrityError
 from utils.excel_exporter import export_to_excel
+from django.contrib import messages
+from django_countries import countries
+from datetime import datetime
+import logging
+
 
 # NOTE: Ensure these imports are correct based on your project structure
 from Olivia.constants import HOUSING_TABS
-from Housing.models import Unit, CompanyGroup, UserCompany
+from Housing.models import Unit, CompanyGroup, UserCompany, HousingUser
 
 
 # =======================================================
@@ -63,7 +68,13 @@ def housing_tab_view(request, tab_name=None, **kwargs):
         "tabs": HOUSING_TABS,
         "active_tab": tab_name,
     }
+
+    # Populate the users for the "user" tab
+    if tab_name == "user":
+        context["users"] = HousingUser.objects.select_related("group", "company").all()
+
     return render(request, template_name, context)
+
 
 # =======================================================
 # COMPANY LIST VIEW
@@ -693,20 +704,27 @@ def company_update_view(request, pk):
         return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
 
 
-@csrf_exempt
+@require_POST # Ensures only POST requests are allowed
 def company_delete_view(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            ids = data.get("ids", [])
-            
-            with transaction.atomic():
-                deleted_count, _ = UserCompany.objects.filter(id__in=ids).delete()
-            
-            return JsonResponse({"success": True, "message": f"Deleted {deleted_count} companies."})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=500)
-    return JsonResponse({"success": False, "error": "Invalid request"}, status=405)
+    try:
+        # 1. Parse JSON data
+        data = json.loads(request.body)
+        ids = data.get("ids", [])
+        
+        # 2. Validate IDs exist
+        if not ids:
+            return JsonResponse({"success": False, "error": "No items selected"}, status=400)
+
+        # 3. Atomic Delete
+        with transaction.atomic():
+            deleted_count, _ = UserCompany.objects.filter(id__in=ids).delete()
+        
+        return JsonResponse({"success": True, "message": f"Deleted {deleted_count} companies."})
+
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
 # =======================================================
@@ -759,3 +777,345 @@ def export_companies(request):
     except Exception as e:
         print(f"Error during company export: {e}")
         return HttpResponse(f"An error occurred during export: {e}", status=500)
+    
+# =======================================================
+# USER VIEW
+# =======================================================
+
+# -------------------------------
+# PAGE VIEW: Users Table
+# -------------------------------
+def users_page(request):
+    try:
+        # 🌟 CRITICAL DEBUG POINT 🌟 This line MUST run now.
+        print("\n!!! VIEW ENTERED: users_page has been called !!!") 
+        
+        # 1. Fetch the full queryset
+        users_qs = HousingUser.objects.all().order_by('-id') 
+        
+        # 2. Create the Paginator
+        paginator = Paginator(users_qs, 15) # 15 users per page
+        page_number = request.GET.get('page', 1) 
+        
+        try:
+            user_page = paginator.page(page_number)
+        except (PageNotAnInteger, EmptyPage):
+            user_page = paginator.page(paginator.num_pages)
+        
+        # 3. Handle 'countries' SAFELY
+        # Define a safe default list
+        countries_list = []
+        
+        # Only attempt to process 'countries' if it's found in the global scope 
+        # (this prevents a NameError from crashing the view)
+        if 'countries' in globals():
+            try:
+                # Process the list if it exists
+                countries_list = [{'code': c.code, 'name': c.name} for c in globals()['countries']]
+            except Exception as e:
+                # Catch any errors during list comprehension (e.g., if objects lack .code)
+                print(f"WARNING: Error processing 'countries': {e}")
+                countries_list = []
+
+        # 🌟 DATA DEBUG BLOCK 🌟 
+        print("\n--- USER PAGE DATA DEBUG ---")
+        total_db_count = users_qs.count()
+        page_items_length = len(user_page.object_list)
+        print(f"DB Count from QuerySet: {total_db_count}") 
+        print(f"Paginator Total Count: {user_page.paginator.count}") 
+        print(f"Items on Current Page: {page_items_length}")
+        print("--- DEBUG END ---")
+
+        # 4. Define Context
+        context = {
+            'users': user_page, # The full Page object
+            'groups': CompanyGroup.objects.all(),
+            'countries': countries_list, # Use the safely defined list
+            'active_tab': 'user',
+        }
+
+        return render(request, 'housing/user.html', context)
+
+    except Exception as e:
+        # If an error still occurs, this will print the traceback
+        print(f"\n!!! UNEXPECTED EXCEPTION CAUGHT: {e} !!!") 
+        # Reraise the error so you can see the full traceback in the terminal
+        raise
+
+# -------------------------------
+# API: Create User
+# -------------------------------
+@csrf_exempt
+def create_user_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed.'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+
+        # Convert dob string to date
+        dob_str = data.get('dob')
+        dob = datetime.strptime(dob_str, "%Y-%m-%d").date() if dob_str else None
+
+        # Get related group/company
+        group = get_object_or_404(CompanyGroup, id=data.get('group_id')) if data.get('group_id') else None
+        company = get_object_or_404(UserCompany, id=data.get('company_id')) if data.get('company_id') else None
+
+        # Create user
+        new_user = HousingUser.objects.create(
+            username=data.get('username'),
+            group=group,
+            company=company,
+            government_id=data.get('government_id'),
+            id_type=data.get('id_type'),
+            neom_id=data.get('neom_id'),
+            dob=dob,
+            mobile=data.get('mobile'),
+            email=data.get('email'),
+            nationality=data.get('nationality'),
+            religion=data.get('religion'),
+            status=data.get('status', 'Active'),
+        )
+
+        response_data = {
+            'id': new_user.id,
+            'username': new_user.username,
+            'group_id': new_user.group.id if new_user.group else None,
+            'group_name': new_user.group.company_name if new_user.group else '-',
+            'company_id': new_user.company.id if new_user.company else None,
+            'company_name': new_user.company.company_name if new_user.company else '-',
+            'government_id': new_user.government_id,
+            'id_type': new_user.id_type,
+            'neom_id': new_user.neom_id,
+            'dob': new_user.dob.isoformat() if new_user.dob else '',
+            'mobile': new_user.mobile,
+            'email': new_user.email,
+            'nationality': new_user.nationality.name if new_user.nationality else '', 
+            'religion': new_user.religion,
+            'status': new_user.status,
+        }
+
+        return JsonResponse(response_data, status=201)
+
+    except Exception as e:
+        return JsonResponse({'error': f'Data validation error: {e}'}, status=400)
+
+
+# -------------------------------
+# API: Update User
+# -------------------------------
+@csrf_exempt
+@require_http_methods(["PUT"])
+def user_update_view(request, pk):
+    try:
+        user = get_object_or_404(HousingUser, pk=pk)
+        data = json.loads(request.body)
+
+        nationality_name = data.get('nationality')  # e.g. "SA"
+
+        user.username = data.get('username', user.username)
+        user.group = get_object_or_404(CompanyGroup, id=data['group_id']) if data.get('group_id') else None
+        user.company = get_object_or_404(UserCompany, id=data['company_id']) if data.get('company_id') else None
+        user.government_id = data.get('government_id', user.government_id)
+        user.id_type = data.get('id_type', user.id_type)
+        user.neom_id = data.get('neom_id', user.neom_id)
+        user.dob = datetime.strptime(data['dob'], "%Y-%m-%d").date() if data.get('dob') else user.dob
+        user.mobile = data.get('mobile', user.mobile)
+        user.email = data.get('email', user.email)
+        user.nationality = nationality_name if nationality_name else None
+        user.religion = data.get('religion', user.religion)
+        user.status = data.get('status', user.status)
+
+        user.save()
+
+        response_data = {
+            'id': user.id,
+            'username': user.username,
+            'group_id': user.group.id if user.group else None,
+            'group_name': user.group.company_name if user.group else '-',
+            'company_id': user.company.id if user.company else None,
+            'company_name': user.company.company_name if user.company else '-',
+            'government_id': user.government_id,
+            'id_type': user.id_type,
+            'neom_id': user.neom_id,
+            'dob': user.dob.isoformat() if user.dob else '',
+            'mobile': user.mobile,
+            'email': user.email,
+            'nationality': user.nationality.name if user.nationality else '',
+            'religion': user.religion,
+            'status': user.status,
+        }
+        return JsonResponse(response_data, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": f"An unexpected error occurred: {e}"}, status=500)
+
+
+# -------------------------------
+# API: Delete Users
+# -------------------------------
+@require_POST
+def user_delete_view(request):
+    try:
+        data = json.loads(request.body)
+        ids = data.get('ids', [])
+        if not ids:
+            return JsonResponse({"success": False, "error": "No items selected"}, status=400)
+
+        with transaction.atomic():
+            deleted_count, _ = HousingUser.objects.filter(id__in=ids).delete()
+
+        return JsonResponse({"success": True, "message": f"Deleted {deleted_count} user(s)."})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+# -------------------------------
+# API: List Groups
+# -------------------------------
+def list_company_groups_api(request):
+    groups = CompanyGroup.objects.all().order_by('company_name')
+    groups_list = list(groups.values('id', 'company_name'))
+    return JsonResponse(groups_list, safe=False)
+
+
+# -------------------------------
+# API: List Companies
+# -------------------------------
+def list_companies_api(request):
+    companies = UserCompany.objects.all().order_by('company_name')
+    companies_list = list(companies.values('id', 'company_name'))
+    return JsonResponse(companies_list, safe=False)
+
+
+# -------------------------------
+# API: Get Companies by Group
+# -------------------------------
+def get_companies(request):
+    group_id = request.GET.get('group_id')
+    if not group_id:
+        return JsonResponse({'error': 'No group_id provided'}, status=400)
+
+    try:
+        group_id = int(group_id)
+        companies_qs = UserCompany.objects.filter(company_group_id=group_id).order_by('company_name')
+        # remove duplicates
+        seen = set()
+        companies = []
+        for c in companies_qs:
+            if c.company_name not in seen:
+                companies.append({'id': c.id, 'company_name': c.company_name})
+                seen.add(c.company_name)
+        return JsonResponse(companies, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# -------------------------------
+# API: Save User from POST Form (optional)
+# -------------------------------
+def save_user(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST allowed."}, status=405)
+
+    user_id = request.POST.get("user_id")
+    dob_str = request.POST.get("dob")
+    dob = datetime.strptime(dob_str, "%Y-%m-%d").date() if dob_str else None
+
+    user = HousingUser.objects.get(id=user_id) if user_id else HousingUser()
+
+    # Get nationality code string
+    nationality_name = request.POST.get("nationality")  # e.g. "SA"
+    
+    # Assign values
+    user.username = request.POST.get("username")
+    user.group_id = request.POST.get("group_id") or None
+    user.company_id = request.POST.get("company_id") or None
+    user.government_id = request.POST.get("government_id")
+    user.id_type = request.POST.get("id_type")
+    user.neom_id = request.POST.get("neom_id")
+    user.mobile = request.POST.get("mobile")
+    user.email = request.POST.get("email")
+    user.nationality = nationality_name if nationality_name else None
+    user.religion = request.POST.get("religion")
+    user.status = request.POST.get("status")
+    user.dob = dob
+
+    user.save()
+
+    # JSON-safe response
+    response_data = {
+        "id": user.id,
+        "username": user.username,
+        "group_id": user.group.id if user.group else None,
+        "group_name": user.group.company_name if user.group else "",
+        "company_id": user.company.id if user.company else None,
+        "company_name": user.company.company_name if user.company else "",
+        "government_id": user.government_id,
+        "id_type": user.id_type,
+        "neom_id": user.neom_id,
+        "dob": user.dob.isoformat() if user.dob else "",
+        "mobile": user.mobile,
+        "email": user.email,
+        'nationality': user.nationality.name if user.nationality else '',
+        "religion": user.religion,
+        "status": user.status,
+    }
+
+    return JsonResponse(response_data, status=200)
+
+# =======================================================
+# EXPORT VIEW (HousingUser)
+# =======================================================
+
+def export_users(request):
+    """
+    Export HousingUser records to Excel.
+    """
+    try:
+        queryset = HousingUser.objects.select_related(
+            'group', 'company'
+        ).order_by('username')
+
+        headers = [
+            "Username",
+            "Government ID",
+            "ID Type",
+            "NEOM ID",
+            "Date of Birth",
+            "Mobile",
+            "Email",
+            "Nationality",
+            "Religion",
+            "Status",
+            "Group",
+            "Company",
+        ]
+
+        def row_data(u):
+            return [
+                u.username or "",
+                u.government_id or "",
+                u.id_type or "",
+                u.neom_id or "",
+                u.dob.strftime("%Y-%m-%d") if u.dob else "",
+                u.mobile or "",
+                u.email or "",
+                u.nationality.name if u.nationality else "",
+                u.religion or "",
+                u.status or "",
+                u.group.company_name if u.group else "",
+                u.company.company_name if u.company else "",
+            ]
+
+        return export_to_excel(
+            queryset,
+            headers,
+            row_data,
+            file_prefix="housing_users"
+        )
+
+    except Exception as e:
+        print(f"Error during user export: {e}")
+        return HttpResponse(f"An error occurred during export: {e}", status=500)
+
