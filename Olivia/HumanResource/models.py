@@ -83,6 +83,7 @@ class Employee(models.Model):
     full_name = models.CharField(max_length=100)
     position = models.CharField(max_length=100, blank=True)
     department = models.CharField(max_length=100)
+    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subordinates')
     nationality = CountryField(blank_label='(Select Nationality)', null=True, blank=True)
     email = models.EmailField(blank=True)
     iqama_number = models.CharField(max_length=20, blank=True)

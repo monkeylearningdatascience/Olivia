@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('id_full_name').value = data.full_name || '';
         document.getElementById('id_position').value = data.position || '';
         document.getElementById('id_department').value = data.department || '';
+        document.getElementById('id_manager').value = data.manager || '';
         document.getElementById('id_nationality').value = data.nationality || '';
         document.getElementById('id_email').value = data.email || '';
         document.getElementById('id_iqama_number').value = data.iqama_number || '';

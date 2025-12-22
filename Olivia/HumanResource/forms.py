@@ -49,6 +49,7 @@ class EmployeeForm(forms.ModelForm):
             'full_name': forms.TextInput(attrs={'class': 'form-control'}),
             'position': forms.TextInput(attrs={'class': 'form-control'}),
             'department': forms.TextInput(attrs={'class': 'form-control'}),
+            'manager': forms.Select(attrs={'class': 'form-select'}),
             'nationality': CountrySelectWidget(attrs={'class': 'form-select'}),
             'photo_url': forms.URLInput(attrs={'class': 'form-control'}),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),

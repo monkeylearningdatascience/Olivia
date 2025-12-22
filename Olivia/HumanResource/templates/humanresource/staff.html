@@ -33,6 +33,7 @@
             <th>Name</th>
             <th>Position</th>
             <th>Department</th>
+            <th>Manager</th>
             <th>Nationality</th>
             <th>Gender</th>
             <th>Start Date</th>
@@ -47,6 +48,7 @@
             <td>{{ e.full_name }}</td>
             <td>{{ e.position }}</td>
             <td>{{ e.department }}</td>
+            <td>{% if e.manager %}{{ e.manager.full_name }}{% else %}-{% endif %}</td>
             <td>{% if e.nationality %}{{ e.nationality.name }}{% endif %}</td>
             <td>{{ e.gender }}</td>
             <td>{% if e.start_date %}{{ e.start_date|date:'F j, Y' }}{% endif %}</td>
@@ -54,7 +56,7 @@
           </tr>
           {% empty %}
           <tr>
-            <td colspan="9" class="text-center text-muted">No staff records found</td>
+            <td colspan="10" class="text-center text-muted">No staff records found</td>
           </tr>
           {% endfor %}
         </tbody>
