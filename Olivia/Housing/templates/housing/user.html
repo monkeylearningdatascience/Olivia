@@ -66,7 +66,7 @@
             <td>{{ user.government_id|default:"-" }}</td>
             <td>{{ user.id_type|default:"-" }}</td>
             <td>{{ user.neom_id|default:"-" }}</td>
-            <td>{% if user.dob %}{{ user.dob|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+            <td>{% if user.dob %}{{ user.dob|date:"m/d/Y" }}{% else %}-{% endif %}</td>
             <td>{{ user.mobile|default:"-" }}</td>
             <td>{{ user.email|default:"-" }}</td>
             <td>{% if user.nationality %}{{ user.nationality.name }}{% else %}-{% endif %}</td>

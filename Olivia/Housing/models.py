@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django_countries.fields import CountryField  
 
 # ====================================================================
@@ -7,10 +8,10 @@ from django_countries.fields import CountryField
 # ====================================================================
 class AuditModel(models.Model):
     """Abstract base class for auditing fields."""
-    created_date = models.DateTimeField(auto_now_add=True)
-    created_by = models.CharField(max_length=255, blank=True, null=True)
-    modified_date = models.DateTimeField(auto_now=True)
-    modified_by = models.CharField(max_length=255, blank=True, null=True)
+    created_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='%(class)s_created')
+    modified_date = models.DateTimeField(auto_now=True, null=True, blank=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='%(class)s_modified')
 
     class Meta:
         abstract = True
@@ -190,7 +191,184 @@ class HousingUser(models.Model):
 
     religion = models.CharField(max_length=20, choices=RELIGION_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
-    
+    created_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_housingusers')
+    modified_date = models.DateTimeField(auto_now=True, null=True, blank=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_housingusers')
 
     def __str__(self):
         return self.username
+
+
+class UnitAllocation(AuditModel):
+    """Tracks allocation of housing units to companies with room/bed capacity"""
+    ALLOCATION_TYPE_CHOICES = [
+        ('UUA', 'UUA'),
+        ('Non UUA', 'Non UUA'),
+    ]
+    
+    ALLOCATION_STATUS_CHOICES = [
+        ('Active', 'Active'),
+        ('Closed', 'Closed'),
+        ('Revised', 'Revised'),
+        ('Extended', 'Extended'),
+        ('Cancelled', 'Cancelled'),
+    ]
+    
+    allocation_type = models.CharField(max_length=20, choices=ALLOCATION_TYPE_CHOICES)
+    uua_number = models.CharField(max_length=50, unique=True, verbose_name="UUA Number")
+    company_group = models.ForeignKey(CompanyGroup, on_delete=models.CASCADE, related_name='allocations')
+    company = models.ForeignKey(UserCompany, on_delete=models.CASCADE, related_name='allocations')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    
+    # Format: "rooms/beds" e.g. "2/4" means 2 rooms, 4 beds
+    a_rooms_beds = models.CharField(max_length=20, verbose_name="A (Rooms/Beds)", blank=True)
+    b_rooms_beds = models.CharField(max_length=20, verbose_name="B (Rooms/Beds)", blank=True)
+    c_rooms_beds = models.CharField(max_length=20, verbose_name="C (Rooms/Beds)", blank=True)
+    d_rooms_beds = models.CharField(max_length=20, verbose_name="D (Rooms/Beds)", blank=True)
+    total_rooms_beds = models.CharField(max_length=20, verbose_name="Total (Rooms/Beds)", blank=True)
+    
+    allocation_status = models.CharField(max_length=20, choices=ALLOCATION_STATUS_CHOICES, default='Active')
+    security_deposit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    advance_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    def calculate_total_rooms_beds(self):
+        """Calculate total rooms and beds from A/B/C/D entries"""
+        total_rooms = 0
+        total_beds = 0
+        
+        for field in [self.a_rooms_beds, self.b_rooms_beds, self.c_rooms_beds, self.d_rooms_beds]:
+            if field and '/' in field:
+                rooms, beds = field.split('/')
+                total_rooms += int(rooms) if rooms.strip().isdigit() else 0
+                total_beds += int(beds) if beds.strip().isdigit() else 0
+        
+        return f"{total_rooms}/{total_beds}"
+    
+    def save(self, *args, **kwargs):
+        self.total_rooms_beds = self.calculate_total_rooms_beds()
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ['-created_date']
+        verbose_name = "Unit Allocation"
+        verbose_name_plural = "Unit Allocations"
+    
+    def __str__(self):
+        return f"{self.uua_number} - {self.company.company_name}"
+
+
+class UnitAssignment(AuditModel):
+    """Links specific units to allocations with accommodation type"""
+    ACCOMMODATION_TYPE_CHOICES = [
+        ('A', 'A'),
+        ('B', 'B'),
+        ('C', 'C'),
+        ('D', 'D'),
+    ]
+    
+    allocation = models.ForeignKey(UnitAllocation, on_delete=models.CASCADE, related_name='unit_assignments')
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name='assignments')
+    accommodation_type = models.CharField(max_length=1, choices=ACCOMMODATION_TYPE_CHOICES)
+    
+    class Meta:
+        ordering = ['-created_date']
+        verbose_name = "Unit Assignment"
+        verbose_name_plural = "Unit Assignments"
+        unique_together = [['allocation', 'unit', 'accommodation_type']]
+    
+    def __str__(self):
+        return f"{self.unit.unit_number} - {self.accommodation_type} ({self.allocation.uua_number})"
+
+
+class Reservation(AuditModel):
+    """Tracks reservation of housing users to assigned units"""
+    OCCUPANCY_STATUS_CHOICES = [
+        ('Reserved', 'Reserved'),
+        ('Hold', 'Hold'),
+        ('Assigned', 'Assigned'),
+        ('Occupied', 'Occupied'),
+        ('Checked In', 'Checked In'),
+        ('Checked Out', 'Checked Out'),
+    ]
+    
+    # From Assignment
+    assignment = models.ForeignKey(UnitAssignment, on_delete=models.CASCADE, related_name='reservations')
+    allocation_type = models.CharField(max_length=255, blank=True)
+    uua_number = models.CharField(max_length=255, blank=True)
+    company_group = models.ForeignKey(CompanyGroup, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
+    company = models.ForeignKey(UserCompany, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    accomodation_type = models.CharField(max_length=50, blank=True)
+    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
+    unit_location_code = models.CharField(max_length=255, blank=True)
+    
+    # From Housing User
+    housing_user = models.ForeignKey(HousingUser, on_delete=models.CASCADE, related_name='reservations')
+    govt_id_number = models.CharField(max_length=255, blank=True)
+    id_type = models.CharField(max_length=50, blank=True)
+    neom_id = models.CharField(max_length=255, blank=True)
+    dob = models.DateField(null=True, blank=True)
+    mobile_number = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    nationality = CountryField(blank=True)
+    religion = models.CharField(max_length=50, blank=True)
+    
+    # Reservation Specific
+    intended_checkin_date = models.DateField()
+    intended_checkout_date = models.DateField()
+    intended_stay_duration = models.IntegerField(help_text="Duration in days", null=True, blank=True)
+    
+    occupancy_status = models.CharField(max_length=20, choices=OCCUPANCY_STATUS_CHOICES, default='Reserved')
+    remarks = models.TextField(blank=True)
+    
+    def calculate_duration(self):
+        """Calculate duration in days between intended check-in and check-out"""
+        if self.intended_checkin_date and self.intended_checkout_date:
+            delta = self.intended_checkout_date - self.intended_checkin_date
+            return delta.days
+        return 0
+    
+    def save(self, *args, **kwargs):
+        self.intended_stay_duration = self.calculate_duration()
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ['-created_date']
+        verbose_name = "Reservation"
+        verbose_name_plural = "Reservations"
+    
+    def __str__(self):
+        return f"{self.housing_user.username} - {self.unit.unit_number if self.unit else 'No Unit'}"
+
+
+class CheckInCheckOut(AuditModel):
+    """Tracks actual check-in and check-out with datetime stamps"""
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='checkins')
+    
+    actual_checkin_datetime = models.DateTimeField(null=True, blank=True)
+    actual_checkout_datetime = models.DateTimeField(null=True, blank=True)
+    actual_stay_duration = models.IntegerField(help_text="Duration in days", null=True, blank=True)
+    remarks = models.TextField(blank=True, null=True)
+    
+    def calculate_actual_duration(self):
+        """Calculate actual duration in days between check-in and check-out"""
+        if self.actual_checkin_datetime and self.actual_checkout_datetime:
+            delta = self.actual_checkout_datetime - self.actual_checkin_datetime
+            return delta.days
+        return 0
+    
+    def save(self, *args, **kwargs):
+        if self.actual_checkin_datetime and self.actual_checkout_datetime:
+            self.actual_stay_duration = self.calculate_actual_duration()
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ['-created_date']
+        verbose_name = "Check-In/Check-Out"
+        verbose_name_plural = "Check-Ins/Check-Outs"
+    
+    def __str__(self):
+        return f"{self.reservation.housing_user.username} - Check-In/Out"

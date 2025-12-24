@@ -53,6 +53,12 @@ Usage:
   </button>
   {% endif %}
 
+  {% if show_manager %}
+  <button class="btn btn-{{ btn_size }} btn-outline-warning" id="{{ manager_id|default:'managerBtn' }}" {% if manager_attrs %}{{ manager_attrs|safe }}{% endif %}>
+    <i class="fas fa-user-tie me-1"></i> Manager
+  </button>
+  {% endif %}
+
   {% if show_group %}
   <button class="btn btn-{{ btn_size }} btn-outline-dark" id="{{ group_id|default:'groupBtn' }}" {% if group_attrs %}{{ group_attrs|safe }}{% endif %}>
     <i class="fas fa-users me-1"></i> Group

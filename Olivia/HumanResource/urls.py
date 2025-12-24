@@ -28,5 +28,9 @@ urlpatterns = [
     path('export/staff/', views.export_staff, name='export_staff'),
     path('import/staff/', views.import_staff, name='import_staff'),
     
+    # Manager CRUD endpoints
+    path('manager/create/', views.manager_create, name='manager_create'),
+    path('manager/update/<int:id>/', views.manager_update, name='manager_update'),
+    
     path("<str:tab>/", views.humanresource_tab, name="humanresource_tab"), 
 ]

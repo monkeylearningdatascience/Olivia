@@ -1,0 +1,53 @@
+<div class="modal fade" id="managerModal" tabindex="-1" aria-labelledby="managerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3 border-0 shadow">
+
+      <div class="modal-header bg-primary border-0" id="managerModalHeader">
+        <h5 class="modal-title fw-semibold" id="managerModalLabel">Add Manager</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="managerForm" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="manager_id" id="manager_id">
+
+          <!-- Error alert container -->
+          <div id="managerFormErrorsContainer" class="alert alert-danger d-none" role="alert">
+            <strong>Please fix the following errors:</strong>
+            <ul id="managerFormErrorsList" class="mb-0 mt-2"></ul>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="manager_staffid" class="form-label">Staff ID</label>
+              <input type="text" class="form-control" id="manager_staffid" name="staffid" required>
+            </div>
+            <div class="col-md-6">
+              <label for="manager_name" class="form-label">Name</label>
+              <input type="text" class="form-control" id="manager_name" name="name" required>
+            </div>
+            <div class="col-md-6">
+              <label for="manager_email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="manager_email" name="email">
+            </div>
+            <div class="col-md-6">
+              <label for="manager_designation" class="form-label">Designation</label>
+              <input type="text" class="form-control" id="manager_designation" name="designation">
+            </div>
+            <div class="col-md-12">
+              <label for="manager_department" class="form-label">Department</label>
+              <input type="text" class="form-control" id="manager_department" name="department">
+            </div>
+          </div>
+
+          <div class="modal-footer mt-4">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success" id="managerSubmitBtn"><i class="bi bi-save me-1"></i> Save</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

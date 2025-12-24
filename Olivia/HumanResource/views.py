@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404, reverse, Http404
 from django.core.paginator import Paginator
-from .models import Cash, Balance, Project, Employee
+from .models import Cash, Balance, Project, Employee, Manager
 from .forms import CashForm, EmployeeForm
 from utils.excel_exporter import export_to_excel
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
@@ -75,6 +75,11 @@ def hr_petty_cash(request):
             # Get data from the cleaned form
             cash_entry = form.save(commit=False)
             
+            # Set audit fields
+            if not instance:  # Creating new
+                cash_entry.created_by = request.user
+            cash_entry.modified_by = request.user
+            
             # --- THIS IS THE CRITICAL FIX ---
             # Get the total from the POST data directly
             total_from_post = request.POST.get('total')
@@ -136,7 +141,8 @@ def export_petty_cash(request):
 
     headers = [
         "Date", "Supplier", "Department", "Description", "Invoice #", "Amount",
-        "VAT", "Import Duty", "Discount", "Total", "Project", "Submitted Date"
+        "VAT", "Import Duty", "Discount", "Total", "Project", "Submitted Date",
+        "Created By", "Created Date", "Modified By", "Modified Date"
     ]
 
     def row_data(c):
@@ -151,9 +157,12 @@ def export_petty_cash(request):
             c.import_duty or 0,
             c.discount or 0,
             c.total,
-            str(c.project_name) if c.project_name else "",  # Convert Project object to string
+            str(c.project_name) if c.project_name else "",
             c.submitted_date.strftime("%Y-%m-%d") if c.submitted_date else "",
-            # c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
+            c.created_by.username if c.created_by else "",
+            c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
+            c.modified_by.username if c.modified_by else "",
+            c.modified_at.strftime("%Y-%m-%d %H:%M:%S") if c.modified_at else "",
         ]
 
     return export_to_excel(queryset, headers, row_data, file_prefix="petty_cash")
@@ -172,7 +181,9 @@ def create_balance_entry(request):
             Balance.objects.create(
                 activity=selected_activity,
                 project_name=project_instance,
-                amount=new_amount
+                amount=new_amount,
+                created_by=request.user,
+                modified_by=request.user
             )
 
             if selected_activity == 'submitted':
@@ -205,7 +216,9 @@ def update_balance_entry(request):
             Balance.objects.create(
                 amount=float(entered_amount),
                 activity=selected_activity,
-                project_name=project_instance
+                project_name=project_instance,
+                created_by=request.user,
+                modified_by=request.user
             )
 
             # Update Cash table only if activity is 'submitted'
@@ -304,15 +317,12 @@ def staff_create(request):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES)
         if form.is_valid():
-            employee = form.save()
-            # If a photo was uploaded, ensure photo_url stores the file URL
-            if getattr(employee, 'photo', None):
-                try:
-                    employee.photo_url = employee.photo.url
-                    employee.save(update_fields=['photo_url'])
-                except Exception:
-                    pass
-            return JsonResponse({'success': True, 'id': employee.id, 'message': 'Employee created successfully', 'photo_url': employee.photo_url})
+            employee = form.save(commit=False)
+            employee.created_by = request.user
+            employee.modified_by = request.user
+            employee.save()
+            photo_url_value = employee.photo_url.url if employee.photo_url else ''
+            return JsonResponse({'success': True, 'id': employee.id, 'message': 'Employee created successfully', 'photo_url': photo_url_value})
         else:
             # Return field-level errors for display in modal
             field_errors = {field: [str(err) for err in errors] for field, errors in form.errors.items()}
@@ -332,14 +342,15 @@ def staff_update(request, id):
             'full_name': employee.full_name,
             'position': employee.position,
             'department': employee.department,
-            'nationality': str(employee.nationality) if employee.nationality else '',
+            'manager': employee.manager_id,
+            'nationality': getattr(employee.nationality, 'code', str(employee.nationality)) if employee.nationality else '',
             'email': employee.email,
             'iqama_number': employee.iqama_number,
             'passport_number': employee.passport_number,
             'gender': employee.gender,
             'location': employee.location,
             'start_date': employee.start_date.isoformat() if employee.start_date else '',
-            'photo_url': employee.photo_url,
+            'photo_url': employee.photo_url.url if employee.photo_url else '',
             'employment_status': employee.employment_status,
         }
         return JsonResponse(data)
@@ -347,15 +358,11 @@ def staff_update(request, id):
     elif request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES, instance=employee)
         if form.is_valid():
-            employee = form.save()
-            # Update photo_url if a new photo was uploaded
-            if getattr(employee, 'photo', None):
-                try:
-                    employee.photo_url = employee.photo.url
-                    employee.save(update_fields=['photo_url'])
-                except Exception:
-                    pass
-            return JsonResponse({'success': True, 'id': employee.id, 'message': 'Employee updated successfully', 'photo_url': employee.photo_url})
+            employee = form.save(commit=False)
+            employee.modified_by = request.user
+            employee.save()
+            photo_url_value = employee.photo_url.url if employee.photo_url else ''
+            return JsonResponse({'success': True, 'id': employee.id, 'message': 'Employee updated successfully', 'photo_url': photo_url_value})
         else:
             # Return field-level errors for display in modal
             field_errors = {field: [str(err) for err in errors] for field, errors in form.errors.items()}
@@ -410,16 +417,14 @@ def staff(request):
 
             form = EmployeeForm(request.POST, request.FILES, instance=instance)
             if form.is_valid():
-                employee = form.save()
-                # If a photo was uploaded, set the photo_url to the file URL
-                if getattr(employee, 'photo', None):
-                    try:
-                        employee.photo_url = employee.photo.url
-                        employee.save(update_fields=['photo_url'])
-                    except Exception:
-                        pass
+                employee = form.save(commit=False)
+                if not instance:  # Creating new
+                    employee.created_by = request.user
+                employee.modified_by = request.user
+                employee.save()
                 message = 'Employee updated successfully' if instance else 'Employee created successfully'
-                return JsonResponse({'success': True, 'id': employee.id, 'message': message, 'photo_url': employee.photo_url})
+                photo_url_value = employee.photo_url.url if employee.photo_url else ''
+                return JsonResponse({'success': True, 'id': employee.id, 'message': message, 'photo_url': photo_url_value})
             else:
                 # Return field-level errors for display in modal
                 field_errors = {field: [str(err) for err in errors] for field, errors in form.errors.items()}
@@ -454,7 +459,9 @@ def export_staff(request):
     # simple CSV/Excel export for employees — reuse export_to_excel if available
     queryset = Employee.objects.all().order_by('full_name')
     headers = [
-        'Staff ID', 'Full Name', 'Position', 'Department', 'Nationality', 'Email', 'Iqama', 'Passport', 'Gender', 'Location', 'Start Date', 'Status'
+        'Staff ID', 'Full Name', 'Position', 'Department', 'Manager', 'Nationality', 'Email', 
+        'Iqama', 'Passport', 'Gender', 'Location', 'Start Date', 'Status',
+        'Created By', 'Created Date', 'Modified By', 'Modified Date'
     ]
 
     def row_data(e):
@@ -463,6 +470,7 @@ def export_staff(request):
             e.full_name or '',
             e.position or '',
             e.department or '',
+            e.manager.name if e.manager else '',
             e.nationality.name if getattr(e, 'nationality', None) else '',
             e.email or '',
             e.iqama_number or '',
@@ -471,6 +479,10 @@ def export_staff(request):
             e.location or '',
             e.start_date.strftime('%B %d, %Y') if e.start_date else '',
             e.employment_status or '',
+            e.created_by.username if e.created_by else '',
+            e.created_at.strftime('%Y-%m-%d %H:%M:%S') if e.created_at else '',
+            e.modified_by.username if e.modified_by else '',
+            e.modified_at.strftime('%Y-%m-%d %H:%M:%S') if e.modified_at else '',
         ]
 
     try:
@@ -561,3 +573,51 @@ def humanresource_tab(request, tab):
         "tabs": HR_TABS,
         "active_tab": tab,
     })
+
+def manager_create(request):
+    """Handle POST request to create a new manager via AJAX."""
+    if request.method == 'POST':
+        try:
+            Manager.objects.create(
+                staffid=request.POST.get('staffid'),
+                name=request.POST.get('name'),
+                email=request.POST.get('email', ''),
+                designation=request.POST.get('designation', ''),
+                department=request.POST.get('department', ''),
+                created_by=request.user,
+                modified_by=request.user
+            )
+            return JsonResponse({'success': True, 'message': 'Manager created successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def manager_update(request, id):
+    """Handle GET to fetch manager data or POST to update manager."""
+    manager = get_object_or_404(Manager, id=id)
+    
+    if request.method == 'GET':
+        data = {
+            'id': manager.id,
+            'staffid': manager.staffid,
+            'name': manager.name,
+            'email': manager.email,
+            'designation': manager.designation,
+            'department': manager.department,
+        }
+        return JsonResponse(data)
+    
+    elif request.method == 'POST':
+        try:
+            manager.staffid = request.POST.get('staffid', manager.staffid)
+            manager.name = request.POST.get('name', manager.name)
+            manager.email = request.POST.get('email', manager.email)
+            manager.designation = request.POST.get('designation', manager.designation)
+            manager.department = request.POST.get('department', manager.department)
+            manager.modified_by = request.user
+            manager.save()
+            return JsonResponse({'success': True, 'message': 'Manager updated successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

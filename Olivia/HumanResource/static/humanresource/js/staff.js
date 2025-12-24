@@ -71,24 +71,48 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       const id = selectedIds[0];
       try {
-        const res = await fetch(`/humanresource/staff/update/${id}/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        if (!res.ok) throw new Error('Failed to fetch');
+        const url = `/humanresource/staff/update/${id}/?_=${Date.now()}`;
+        const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          console.error('Update fetch failed', { url, status: res.status, statusText: res.statusText, body: text?.slice?.(0, 200) });
+          throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        }
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await res.text();
+          console.error('Non-JSON response for update endpoint', { url, text: text?.slice?.(0, 200) });
+          throw new Error('Non-JSON response (possibly redirected to login)');
+        }
         const data = await res.json();
-        // populate form
-        document.getElementById('employee_id').value = data.id;
-        document.getElementById('id_staffid').value = data.staffid || '';
-        document.getElementById('id_full_name').value = data.full_name || '';
-        document.getElementById('id_position').value = data.position || '';
-        document.getElementById('id_department').value = data.department || '';
-        document.getElementById('id_manager').value = data.manager || '';
-        document.getElementById('id_nationality').value = data.nationality || '';
-        document.getElementById('id_email').value = data.email || '';
-        document.getElementById('id_iqama_number').value = data.iqama_number || '';
-        document.getElementById('id_passport_number').value = data.passport_number || '';
-        document.getElementById('id_gender').value = data.gender || '';
-        document.getElementById('id_location').value = data.location || '';
-        document.getElementById('id_start_date').value = data.start_date || '';
-        document.getElementById('id_photo_url').value = data.photo_url || '';
+        // populate form safely
+        const setValue = (elemId, value) => {
+          const el = document.getElementById(elemId);
+          if (!el) {
+            console.warn('Missing form element:', elemId);
+            return;
+          }
+          // Skip file inputs - they can't be programmatically set for security reasons
+          if (el.type === 'file') {
+            console.log('Skipping file input:', elemId);
+            return;
+          }
+          el.value = value ?? '';
+        };
+
+        setValue('employee_id', data.id);
+        setValue('id_staffid', data.staffid);
+        setValue('id_full_name', data.full_name);
+        setValue('id_position', data.position);
+        setValue('id_department', data.department);
+        setValue('id_manager', data.manager);
+        setValue('id_nationality', data.nationality);
+        setValue('id_email', data.email);
+        setValue('id_iqama_number', data.iqama_number);
+        setValue('id_passport_number', data.passport_number);
+        setValue('id_gender', data.gender);
+        setValue('id_location', data.location);
+        setValue('id_start_date', data.start_date);
         // show existing photo preview if available
         const preview = document.getElementById('photoPreview');
         if (preview) {
@@ -100,13 +124,14 @@ document.addEventListener('DOMContentLoaded', function () {
             preview.classList.add('d-none');
           }
         }
-        document.getElementById('id_employment_status').value = data.employment_status || 'active';
+        setValue('id_employment_status', data.employment_status || 'active');
         document.getElementById('staffModalLabel').innerText = 'Update Staff';
         setStaffHeader('update');
-        staffModal.show();
+        const modal = getStaffModal();
+        if (modal) modal.show();
       } catch (err) {
-        console.error(err);
-        alert('Could not load staff record for update');
+        console.error('Update load error:', err);
+        alert(`Could not load staff record for update.\n${err?.message || ''}`);
       }
     });
   }
@@ -134,7 +159,8 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          if (staffModal) staffModal.hide();
+          const modal = getStaffModal();
+          if (modal) modal.hide();
           window.location.reload();
         } else {
           // Handle field-level errors
@@ -343,6 +369,51 @@ document.addEventListener('DOMContentLoaded', function () {
           importStaffSubmitBtn.disabled = false;
         }
         alert('Network error during import');
+      });
+    });
+  }
+
+  // Manager Form Handler
+  const managerForm = document.getElementById('managerForm');
+  const managerModalEl = document.getElementById('managerModal');
+  const getManagerModal = () => managerModalEl ? bootstrap.Modal.getOrCreateInstance(managerModalEl) : null;
+
+  if (managerForm) {
+    managerForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      
+      const errorsContainer = document.getElementById('managerFormErrorsContainer');
+      const errorsList = document.getElementById('managerFormErrorsList');
+      if (errorsContainer) {
+        errorsContainer.classList.add('d-none');
+        errorsList.innerHTML = '';
+      }
+      
+      const formData = new FormData(managerForm);
+      const managerId = document.getElementById('manager_id').value;
+      const url = managerId ? `/humanresource/manager/update/${managerId}/` : '/humanresource/manager/create/';
+      
+      fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCsrf(),
+        }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const modal = getManagerModal();
+          if (modal) modal.hide();
+          alert(data.message);
+          window.location.reload();
+        } else {
+          alert('Error: ' + (data.message || 'Failed to save manager'));
+        }
+      }).catch(err => {
+        console.error(err);
+        alert('Network error');
       });
     });
   }

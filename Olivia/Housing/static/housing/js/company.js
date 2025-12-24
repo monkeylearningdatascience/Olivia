@@ -317,25 +317,39 @@ $(document).ready(function () {
         if (!validateSelectionAndShowModal('update', selectedIds)) return;
 
         const companyId = selectedIds[0];
-        const $row = $companyTableBody.find(`input[value="${companyId}"]`).closest('tr');
-        const companyData = getDataFromRow($row);
+        const UPDATE_API_ENDPOINT = `/housing/company/update/${companyId}/`;
+        
+        // Fetch full company details from server
+        $.ajax({
+            url: UPDATE_API_ENDPOINT,
+            type: 'GET',
+            dataType: 'json',
+            success: function (companyData) {
+                // Populate all form fields with data from server
+                $('#companyName').val(companyData.company_name || '');
+                $('#crNumber').val(companyData.cr_number || '');
+                $('#vatNumber').val(companyData.vat_number || '');
+                $('#contactName').val(companyData.contact_name || '');
+                $('#emailAddress').val(companyData.email_address || '');
+                $('#mobile').val(companyData.mobile || '');
+                $('#phone').val(companyData.phone || '');
+                $('#companyDetails').val(companyData.company_details || '');
+                $('#addressText').val(companyData.address_text || '');
 
-        $('#companyName').val(companyData.companyName);
-        $('#crNumber').val(companyData.crNumber === '-' ? '' : companyData.crNumber);
-        $('#vatNumber').val(companyData.vatNumber === '-' ? '' : companyData.vatNumber);
-        $('#contactName').val(companyData.contactName === '-' ? '' : companyData.contactName);
-        $('#emailAddress').val(companyData.emailAddress === '-' ? '' : companyData.emailAddress);
-        $('#mobile').val(companyData.mobile === '-' ? '' : companyData.mobile);
-        $('#phone').val(companyData.phone === '-' ? '' : companyData.phone);
-        $('#companyDetails').val(companyData.companyDetails);
-        $('#addressText').val(companyData.addressText);
+                $companyForm.data('mode', 'update').data('company-id', companyId);
+                $('#companyModalLabel').text('Update Company Details');
+                $saveCompanyBtn.text('Update Company').prop('disabled', false);
 
-        $companyForm.data('mode', 'update').data('company-id', companyId);
-        $('#companyModalLabel').text('Update Company Details');
-        $saveCompanyBtn.text('Update Company').prop('disabled', false);
-
-        populateCompanyGroupDropdown('#companyGroup', GROUP_LIST_API_ENDPOINT, companyData.companyGroup);
-        bootstrap.Modal.getOrCreateInstance($companyModal[0]).show();
+                populateCompanyGroupDropdown('#companyGroup', GROUP_LIST_API_ENDPOINT, companyData.company_group_id);
+                bootstrap.Modal.getOrCreateInstance($companyModal[0]).show();
+            },
+            error: function (xhr) {
+                let errorMessage = `Error fetching company details (Status: ${xhr.status})`;
+                showCustomMessageModal('Error Loading Company',
+                    `Could not load company details.<br>${errorMessage}`,
+                    false, 'bg-danger', 'btn-danger', 'bi-x-octagon-fill');
+            }
+        });
     });
 
     // Delete Companies (open confirmation)
@@ -446,6 +460,80 @@ $(document).ready(function () {
     $companyTableBody.on('change', 'input.select-entry', function () {
         // keep select-all in sync
         updateSelectAllState();
+    });
+
+    // =======================================================
+    // Company Group Management
+    // =======================================================
+    const $companyGroupModal = $('#companyGroupModal');
+    const $companyGroupForm = $('#companyGroupForm');
+    const $saveGroupBtn = $('#saveGroupBtn');
+    const GROUP_CREATE_API_ENDPOINT = '/housing/groups/create/';
+
+    // Open Company Group Modal
+    $('#viewGroupBtn').on('click', function () {
+        $companyGroupForm[0].reset();
+        $('#companyGroupId').val('');
+        $('#groupName').focus();
+    });
+
+    // Save Company Group
+    $saveGroupBtn.on('click', function (e) {
+        e.preventDefault();
+        
+        if (!$companyGroupForm[0].checkValidity()) {
+            $companyGroupForm[0].reportValidity();
+            return false;
+        }
+
+        const groupName = $('#groupName').val().trim();
+        if (!groupName) {
+            showCustomMessageModal('Validation Error', 'Please enter a company group name.', false, 'bg-warning', 'btn-warning', 'bi-exclamation-triangle-fill');
+            return false;
+        }
+
+        $saveGroupBtn.prop('disabled', true).text('Saving...');
+
+        $.ajax({
+            url: GROUP_CREATE_API_ENDPOINT,
+            type: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() },
+            contentType: 'application/json',
+            data: JSON.stringify({ company_name: groupName }),
+            success: function (response) {
+                $companyGroupForm[0].reset();
+                bootstrap.Modal.getOrCreateInstance($companyGroupModal[0]).hide();
+                
+                showCustomMessageModal('Success! 🎉',
+                    `Company Group **${groupName}** has been created successfully.`,
+                    true, 'bg-success', 'btn-success', 'bi-check-circle-fill');
+                
+                // Refresh the company group dropdown in the company form
+                populateCompanyGroupDropdown('#companyGroup', GROUP_LIST_API_ENDPOINT);
+            },
+            error: function (xhr) {
+                let errorMessage = `Error (Status: ${xhr.status}): ${xhr.statusText || 'Server Error'}`;
+                try {
+                    const json = JSON.parse(xhr.responseText);
+                    if (json && typeof json === 'object') errorMessage = JSON.stringify(json, null, 2);
+                } catch (err) { /* ignore parse */ }
+
+                showCustomMessageModal('Error Creating Group',
+                    `An error occurred.<br><pre class="text-start">${errorMessage}</pre>`,
+                    false, 'bg-danger', 'btn-danger', 'bi-x-octagon-fill');
+            },
+            complete: function () {
+                $saveGroupBtn.prop('disabled', false).text('Save');
+            }
+        });
+        return false;
+    });
+
+    // Also handle form submission via Enter key
+    $companyGroupForm.on('submit', function (e) {
+        e.preventDefault();
+        $saveGroupBtn.click();
+        return false;
     });
 
     // Debugging helper (uncomment to log)

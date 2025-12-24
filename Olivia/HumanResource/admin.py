@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.http import HttpResponse
-from .models import Cash, Balance, Project, Employee
+from .models import Cash, Balance, Project, Employee, Manager
 from utils.excel_exporter import export_to_excel
 
 
@@ -73,6 +73,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         'position',
         'employment_status',
         'department',
+        'manager',
         'email',
         'start_date',
         'photo_preview',
@@ -90,7 +91,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Basic Info', {
-            'fields': ('staffid', 'full_name', 'position', 'department', 'employment_status')
+            'fields': ('staffid', 'full_name', 'position', 'department', 'manager', 'employment_status')
         }),
         ('Contact', {
             'fields': ('email', 'location')
@@ -102,6 +103,9 @@ class EmployeeAdmin(admin.ModelAdmin):
             'fields': ('start_date', 'gender', 'photo_url')
         }),
     )
+
+    # Use autocomplete for selecting a manager to improve admin UX and performance
+    autocomplete_fields = ('manager',)
 
     def photo_preview(self, obj):
         url = getattr(obj, 'photo_url', None) or (obj.photo.url if getattr(obj, 'photo', None) else None)
@@ -139,3 +143,9 @@ class EmployeeAdmin(admin.ModelAdmin):
             return None
 
     export_selected_employees.short_description = 'Export selected employees to Excel'
+
+@admin.register(Manager)
+class ManagerAdmin(admin.ModelAdmin):
+    list_display = ('staffid', 'name', 'email', 'designation', 'department')
+    search_fields = ('staffid', 'name', 'email', 'designation', 'department')
+    list_filter = ('department', 'designation')

@@ -16,7 +16,7 @@
         <input placeholder="Search..." id="search" class="form-control shadow-none" type="search">
       </div>
 
-      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewStaffBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#staffModal"' show_update=True update_id='updateStaffBtn' show_delete=True delete_id='deleteSelectedBtn' show_import=True import_id='importBtn' import_attrs='data-bs-toggle="modal" data-bs-target="#importStaffModal"' show_export=True export_id='exportBtn' %}
+      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewStaffBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#staffModal"' show_update=True update_id='updateStaffBtn' show_delete=True delete_id='deleteSelectedBtn' show_manager=True manager_id='managerBtn' manager_attrs='data-bs-toggle="modal" data-bs-target="#managerModal"' show_export=True export_id='exportBtn' %}
 
     </div>
   </div>
@@ -48,7 +48,7 @@
             <td>{{ e.full_name }}</td>
             <td>{{ e.position }}</td>
             <td>{{ e.department }}</td>
-            <td>{% if e.manager %}{{ e.manager.full_name }}{% else %}-{% endif %}</td>
+            <td>{% if e.manager %}{{ e.manager.name }}{% else %}-{% endif %}</td>
             <td>{% if e.nationality %}{{ e.nationality.name }}{% endif %}</td>
             <td>{{ e.gender }}</td>
             <td>{% if e.start_date %}{{ e.start_date|date:'F j, Y' }}{% endif %}</td>
@@ -76,10 +76,10 @@
   <!-- Include Modals -->
   {% include 'humanresource/include/modals/delete_modal.html' %}
   {% include 'humanresource/include/modals/staff_modal.html' %}
-  {% include 'humanresource/include/modals/importStaffModal.html' %}
+  {% include 'humanresource/include/modals/manager_modal.html' %}
   {% include 'humanresource/include/modals/view_selection_modal.html' %}
 
 </div>
 
-<script src="{% static 'humanresource/js/staff.js' %}?v=20251221b"></script>
+<script src="{% static 'humanresource/js/staff.js' %}?v=20251222f"></script>
 {% endblock %}

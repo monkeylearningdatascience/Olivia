@@ -1,12 +1,145 @@
 {% extends "housing/home.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'humanresource/css/humanresource.css' %}">
+<link rel="stylesheet" href="{% static 'housing/css/company.css' %}">
+{% endblock %}
 
 {% block hr_content %}
-<div class="mt-4">
-    <div class="card mt-3 shadow">
-      <div class="card-body">
-        <h5 class="card-title mb-4">Unit Assigning</h5>
-        <p>All unit assigning details will appear here.</p>
+
+<div class="card shadow-lg border-0 rounded-3 mt-4">
+
+  <div class="card-header bg-white border-0 px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <h3 class="fw-semibold mb-0" style="font-family: 'Poppins', sans-serif;">
+        Unit Assignment
+      </h3>
+      <div class="search-box mx-3">
+        <input placeholder="Search..." id="search" class="form-control shadow-none" type="search">
+      </div>
+
+      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewAssignmentBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#assignmentModal"' show_update=True update_id='updateAssignmentBtn' show_delete=True delete_id='deleteSelectedBtn' delete_attrs='data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"' show_export=True export_id='exportBtn' %}
+
+    </div>
+  </div>
+  <hr class="no-margin-hr">
+
+  <div class="card-body px-4 py-3">
+    <div class="table-responsive">
+      <table id="assignmentTable" class="table table-sm align-middle table-hover mb-0"
+        style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+        <thead class="table-light text-muted">
+          <tr>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>UUA Number</th>
+            <th>Allocation</th>
+            <th>Company Group</th>
+            <th>Company</th>
+            <th>Accommodation</th>
+            <th>Unit Number</th>
+            <th>Zone</th>
+            <th>Area</th>
+            <th>Block#</th>
+            <th>Building#</th>
+            <th>Floor</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            
+          </tr>
+        </thead>
+
+        <tbody id="assignmentTableBody">
+          {% for assignment in assignments %}
+          <tr class="{% if forloop.first %}new-entry{% endif %}">
+            <td><input type="checkbox" class="select-entry" id="assignment-{{ assignment.id }}" value="{{ assignment.id }}"></td>
+            <td>{{ assignment.allocation.uua_number|default:'-' }}</td>
+            <td>{{ assignment.allocation.allocation_type|default:'-' }}</td>
+            <td>{{ assignment.allocation.company_group.company_name|default:'-' }}</td>
+            <td>{{ assignment.allocation.company.company_name|default:'-' }}</td>
+            <td>{{ assignment.accommodation_type }}</td>
+            <td>{{ assignment.unit.unit_number|default:'-' }}</td>
+            <td>{{ assignment.unit.zone|default:'-' }}</td>
+            <td>{{ assignment.unit.area|default:'-' }}</td>
+            <td>{{ assignment.unit.block|default:'-' }}</td>
+            <td>{{ assignment.unit.building|default:'-' }}</td>
+            <td>{{ assignment.unit.floor|default:'-' }}</td>
+            <td>{{ assignment.allocation.start_date|date:'m/d/Y'|default:'-' }}</td>
+            <td>{{ assignment.allocation.end_date|date:'m/d/Y'|default:'-' }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="14" class="text-center text-muted">No assignment records found</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+
+  <div class="card-footer bg-white border-0 rounded-3 py-3 px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+      <div class="d-flex align-items-center small text-muted">
+        <span class="me-3">
+          {% if assignments %}
+          Showing {{ assignments.start_index }} to {{ assignments.end_index }} of {{ assignments.paginator.count }} entries
+          {% else %}
+          No entries
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="d-flex gap-2">
+        {% if assignments.has_previous %}
+        <a href="{% url 'assigning' %}?page={{ assignments.previous_page_number }}"
+          class="btn btn-outline-secondary btn-sm">
+          Previous
+        </a>
+        {% endif %}
+
+        {% if assignments.has_next %}
+        <a href="{% url 'assigning' %}?page={{ assignments.next_page_number }}"
+          class="btn btn-outline-secondary btn-sm">
+          Next
+        </a>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+{% include 'housing/include/modals/assignment_modal.html' %}
+{% include 'housing/include/modals/selection_error_modal.html' %}
+
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Deletion</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete the selected assignment(s)?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
       </div>
     </div>
-</div>  
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{# scripts: make sure jQuery is available before assignment.js #}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+<script src="{% static 'housing/js/assignment.js' %}"></script>
 {% endblock %}

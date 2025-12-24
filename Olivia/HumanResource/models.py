@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django_countries.fields import CountryField
 
 # Create your models here.
@@ -18,6 +19,10 @@ from django_countries.fields import CountryField
 
 class Project(models.Model):
     project_name = models.CharField(max_length=255, unique=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_projects')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_projects')
+    modified_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.project_name
 
@@ -31,6 +36,10 @@ class Balance(models.Model):
     activity = models.CharField(max_length=20, choices=ACTIVITY_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     project_name = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="balances")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_balances')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_balances')
+    modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.project_name} - {self.activity} - {self.amount}"
@@ -59,7 +68,10 @@ class Cash(models.Model):
     attachments = models.FileField(upload_to='pettycash/attachments/', blank=True, null=True)
     submitted_date = models.DateField(null=True, blank=True)
     project_name = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="cash_entries")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_cash')
     created_at = models.DateTimeField(auto_now_add=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_cash')
+    modified_at = models.DateTimeField(auto_now=True)
     
     # def save(self, *args, **kwargs):
     #     # Calculate total only if it's not provided or is 0
@@ -75,6 +87,20 @@ def employee_photo_path(instance, filename):
     identifier = getattr(instance, 'staffid', None) or getattr(instance, 'id', 'unknown')
     return f'staff/photos/{identifier}/{filename}'
 
+class Manager(models.Model):
+    staffid = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+    designation = models.CharField(max_length=100, blank=True)
+    department = models.CharField(max_length=100, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_managers')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_managers')
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.staffid})"
+
 class Employee(models.Model):
     GENDER_CHOICES = [('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')]
     STATUS_CHOICES = [('active', 'Active'), ('on_notice', 'On Notice'), ('exited', 'Exited')]
@@ -83,7 +109,7 @@ class Employee(models.Model):
     full_name = models.CharField(max_length=100)
     position = models.CharField(max_length=100, blank=True)
     department = models.CharField(max_length=100)
-    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subordinates')
+    manager = models.ForeignKey(Manager, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
     nationality = CountryField(blank_label='(Select Nationality)', null=True, blank=True)
     email = models.EmailField(blank=True)
     iqama_number = models.CharField(max_length=20, blank=True)
@@ -92,11 +118,13 @@ class Employee(models.Model):
     location = models.CharField(max_length=100, blank=True)
     start_date = models.DateField(null=True, blank=True)
     photo = models.ImageField(upload_to=employee_photo_path, blank=True, null=True)
-    photo_url = models.URLField(blank=True)  # fallback if using external
+    photo_url = models.FileField(upload_to='staff/documents/', blank=True, null=True)
     employment_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     documents = models.JSONField(default=list, blank=True)  # list of dicts
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_employees')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_employees')
+    modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         # Use staffid which exists on the model

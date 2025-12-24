@@ -14,13 +14,13 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
 
       <h3 class="fw-semibold mb-0" style="font-family: 'Poppins', sans-serif;">
-        Reservations
+        Check-In / Check-Out
       </h3>
       <div class="search-box mx-3">
         <input placeholder="Search..." id="search" class="form-control shadow-none" type="search">
       </div>
 
-      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewReservationBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#reservationModal"' show_update=True update_id='updateReservationBtn' show_delete=True delete_id='deleteSelectedBtn' delete_attrs='data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"' show_export=True export_id='exportBtn' %}
+      {% include 'includes/action_toolbar.html' with size='sm' show_create=True create_id='addNewCheckinBtn' create_attrs='data-bs-toggle="modal" data-bs-target="#checkinModal"' show_update=True update_id='updateCheckinBtn' show_delete=True delete_id='deleteSelectedBtn' delete_attrs='data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal"' show_export=True export_id='exportBtn' %}
 
     </div>
   </div>
@@ -28,40 +28,46 @@
 
   <div class="card-body px-4 py-3">
     <div class="table-responsive">
-      <table id="reservationTable" class="table table-sm align-middle table-hover mb-0"
+      <table id="checkinTable" class="table table-sm align-middle table-hover mb-0"
         style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
         <thead class="table-light text-muted">
           <tr>
             <th><input type="checkbox" id="selectAll"></th>
-            <th>Housing User</th>
+            <th>User</th>
             <th>Unit Number</th>
-            <th>UUA Number</th>
-            <th>Company</th>
-            <th>Check-In Date</th>
-            <th>Check-Out Date</th>
-            <th>Duration (Months)</th>
-            <th>Occupancy Status</th>
-            <th>Remarks</th>
+            <th>Check-In Date/Time</th>
+            <th>Check-Out Date/Time</th>
+            <th>Duration (Days)</th>
+            <th>Intended Check-In</th>
+            <th>Intended Check-Out</th>
+            <th>Status</th>
           </tr>
         </thead>
 
-        <tbody id="reservationTableBody">
-          {% for reservation in reservations %}
+        <tbody id="checkinTableBody">
+          {% for checkin in checkins %}
           <tr class="{% if forloop.first %}new-entry{% endif %}">
-            <td><input type="checkbox" class="select-entry" id="reservation-{{ reservation.id }}" value="{{ reservation.id }}"></td>
-            <td>{{ reservation.housing_user.username|default:'-' }}</td>
-            <td>{{ reservation.assignment.unit.unit_number|default:'-' }}</td>
-            <td>{{ reservation.assignment.allocation.uua_number|default:'-' }}</td>
-            <td>{{ reservation.assignment.allocation.company.company_name|default:'-' }}</td>
-            <td>{{ reservation.intended_checkin_date|date:"m/d/Y" }}</td>
-            <td>{{ reservation.intended_checkout_date|date:"m/d/Y" }}</td>
-            <td>{{ reservation.intended_stay_duration|default:'-' }}</td>
-            <td><span class="badge bg-info">{{ reservation.occupancy_status }}</span></td>
-            <td>{{ reservation.remarks|truncatewords:5|default:'-' }}</td>
+            <td><input type="checkbox" class="select-entry" id="checkin-{{ checkin.id }}" value="{{ checkin.id }}"></td>
+            <td>{{ checkin.reservation.housing_user.username|default:'-' }}</td>
+            <td>{{ checkin.reservation.assignment.unit.unit_number|default:'-' }}</td>
+            <td>{{ checkin.actual_checkin_datetime|date:"m/d/Y H:i"|default:'-' }}</td>
+            <td>{{ checkin.actual_checkout_datetime|date:"m/d/Y H:i"|default:'-' }}</td>
+            <td>{{ checkin.actual_stay_duration|default:'-' }}</td>
+            <td>{{ checkin.reservation.intended_checkin_date|date:"m/d/Y"|default:'-' }}</td>
+            <td>{{ checkin.reservation.intended_checkout_date|date:"m/d/Y"|default:'-' }}</td>
+            <td>
+              {% if checkin.actual_checkout_datetime %}
+              <span class="badge bg-success">Checked Out</span>
+              {% elif checkin.actual_checkin_datetime %}
+              <span class="badge bg-primary">Checked In</span>
+              {% else %}
+              <span class="badge bg-secondary">Pending</span>
+              {% endif %}
+            </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="10" class="text-center text-muted">No reservation records found</td>
+            <td colspan="9" class="text-center text-muted">No check-in/check-out records found</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -75,8 +81,8 @@
 
       <div class="d-flex align-items-center small text-muted">
         <span class="me-3">
-          {% if reservations %}
-          Showing {{ reservations.start_index }} to {{ reservations.end_index }} of {{ reservations.paginator.count }} entries
+          {% if checkins %}
+          Showing {{ checkins.start_index }} to {{ checkins.end_index }} of {{ checkins.paginator.count }} entries
           {% else %}
           No entries
           {% endif %}
@@ -84,15 +90,15 @@
       </div>
 
       <div class="d-flex gap-2">
-        {% if reservations.has_previous %}
-        <a href="{% url 'reservation' %}?page={{ reservations.previous_page_number }}"
+        {% if checkins.has_previous %}
+        <a href="{% url 'checkin_checkout' %}?page={{ checkins.previous_page_number }}"
           class="btn btn-outline-secondary btn-sm">
           Previous
         </a>
         {% endif %}
 
-        {% if reservations.has_next %}
-        <a href="{% url 'reservation' %}?page={{ reservations.next_page_number }}"
+        {% if checkins.has_next %}
+        <a href="{% url 'checkin_checkout' %}?page={{ checkins.next_page_number }}"
           class="btn btn-outline-secondary btn-sm">
           Next
         </a>
@@ -104,7 +110,7 @@
 
 </div>
 
-{% include 'housing/include/modals/reservation_modal.html' %}
+{% include 'housing/include/modals/checkin_modal.html' %}
 {% include 'housing/include/modals/selection_error_modal.html' %}
 
 <div class="modal fade" id="viewSelectionModal" tabindex="-1" aria-labelledby="viewSelectionModalLabel" aria-hidden="true">
@@ -132,7 +138,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        Are you sure you want to delete the selected reservation(s)?
+        Are you sure you want to delete the selected check-in/check-out record(s)?
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -145,9 +151,8 @@
 {% endblock %}
 
 {% block extra_js %}
-{# scripts: make sure jQuery is available before reservation.js #}
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"
   integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
-<script src="{% static 'housing/js/reservation.js' %}"></script>
+<script src="{% static 'housing/js/checkin.js' %}"></script>
 {% endblock %}

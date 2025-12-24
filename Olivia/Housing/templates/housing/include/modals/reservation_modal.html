@@ -1,0 +1,219 @@
+<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title text-white" id="reservationModalLabel">Add New Reservation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form id="reservationForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="reservationId" name="id" value="">
+
+                    <div class="row g-3">
+                        <!-- Assignment Section -->
+                        <!-- <div class="col-12">
+                            <h6 class="border-bottom pb-2">Assignment Information</h6>
+                        </div> -->
+
+                        <div class="col-md-3">
+                            <label for="assignment" class="form-label">Unit Assignment <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="assignment" name="assignment" required>
+                                <option value="">Select Unit...</option>
+                                {% for assign in assignments %}
+                                <option value="{{ assign.id }}"
+                                    data-unit="{{ assign.unit.unit_number }}"
+                                    data-unit-id="{{ assign.unit.id }}"
+                                    data-uua="{{ assign.allocation.uua_number }}"
+                                    data-company="{{ assign.allocation.company.company_name }}"
+                                    data-company-id="{{ assign.allocation.company.id }}"
+                                    data-group="{{ assign.allocation.company_group.company_name }}"
+                                    data-group-id="{{ assign.allocation.company_group.id }}"
+                                    data-allocation-type="{{ assign.allocation.allocation_type }}"
+                                    data-start-date="{{ assign.allocation.start_date|date:'m/d/Y' }}"
+                                    data-end-date="{{ assign.allocation.end_date|date:'m/d/Y' }}"
+                                    data-accom-type="{{ assign.unit.accomodation_type }}"
+                                    data-zone="{{ assign.unit.zone }}"
+                                    data-area="{{ assign.unit.area }}"
+                                    data-block="{{ assign.unit.block }}"
+                                    data-building="{{ assign.unit.building }}"
+                                    data-floor="{{ assign.unit.floor }}"
+                                    data-location-code="{{ assign.unit.zone }}-{{ assign.unit.area }}-{{ assign.unit.block }}-{{ assign.unit.building }}-{{ assign.unit.floor }}">
+                                    {{ assign.unit.unit_number }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="allocationType" class="form-label">Allocation Type</label>
+                            <input type="text" class="form-control" id="allocationType" name="allocation_type" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="uuaNumber" class="form-label">UUA Number</label>
+                            <input type="text" class="form-control" id="uuaNumber" name="uua_number" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="companyGroup" class="form-label">Company Group</label>
+                            <input type="text" class="form-control" id="companyGroup" name="company_group_name" readonly>
+                            <input type="hidden" id="companyGroupId" name="company_group">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="company" class="form-label">Company</label>
+                            <input type="text" class="form-control" id="company" name="company_name" readonly>
+                            <input type="hidden" id="companyId" name="company">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" name="start_date" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" name="end_date" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="accomodationType" class="form-label">Accommodation Type</label>
+                            <input type="text" class="form-control" id="accomodationType" name="accomodation_type" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="unitNumber" class="form-label">Unit Number <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="unitNumber" name="unit" required>
+                                <option value="">Select Unit...</option>
+                                {% for unit in assigned_units %}
+                                <option value="{{ unit.id }}">{{ unit.unit_number }} - {{ unit.accomodation_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="unitLocationCode" class="form-label">Unit Location Code</label>
+                            <input type="text" class="form-control" id="unitLocationCode" name="unit_location_code" readonly>
+                        </div>
+
+                        <!-- Housing User Section -->
+                        <!-- <div class="col-12 mt-4">
+                            <h6 class="border-bottom pb-2">Housing User Information</h6>
+                        </div> -->
+
+                        <div class="col-md-3">
+                            <label for="housingUser" class="form-label">User Name <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="housingUser" name="housing_user" required>
+                                <option value="">Select User...</option>
+                                {% for user in housing_users %}
+                                <option value="{{ user.id }}"
+                                    data-neomid="{{ user.neom_id }}"
+                                    data-govid="{{ user.government_id }}"
+                                    data-idtype="{{ user.id_type }}"
+                                    data-dob="{{ user.dob|date:'m/d/Y' }}"
+                                    data-mobile="{{ user.mobile }}"
+                                    data-email="{{ user.email }}"
+                                    data-nationality="{% if user.nationality %}{{ user.nationality.name }}{% endif %}"
+                                    data-religion="{{ user.religion }}"
+                                    data-company="{{ user.company.company_name }}"
+                                    data-group="{{ user.group.company_name }}">
+                                    {{ user.username }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="govtId" class="form-label">Govt ID Number</label>
+                            <input type="text" class="form-control" id="govtId" name="govt_id_number" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="idType" class="form-label">ID Type</label>
+                            <input type="text" class="form-control" id="idType" name="id_type" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="neomId" class="form-label">NEOM ID</label>
+                            <input type="text" class="form-control" id="neomId" name="neom_id" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="dob" class="form-label">D.O.B</label>
+                            <input type="date" class="form-control" id="dob" name="dob" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="mobileNumber" class="form-label">Mobile Number</label>
+                            <input type="text" class="form-control" id="mobileNumber" name="mobile_number" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="nationality" class="form-label">Nationality</label>
+                            <input type="text" class="form-control" id="nationality" name="nationality" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="religion" class="form-label">Religion</label>
+                            <input type="text" class="form-control" id="religion" name="religion" readonly>
+                        </div>
+
+                        <!-- Reservation Specific Section -->
+                        <!-- <div class="col-12 mt-4">
+                            <h6 class="border-bottom pb-2">Reservation Details</h6>
+                        </div> -->
+
+                        <div class="col-md-3">
+                            <label for="occupancyStatus" class="form-label">Occupancy Status <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="occupancyStatus" name="occupancy_status" required>
+                                <option value="" selected>Select Status...</option>
+                                <option value="Reserved">Reserved</option>
+                                <option value="Hold">Hold</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="intendedCheckinDate" class="form-label">Intended Check-In Date <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="intendedCheckinDate" 
+                                name="intended_checkin_date" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="intendedCheckoutDate" class="form-label">Intended Check-Out Date <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="intendedCheckoutDate" 
+                                name="intended_checkout_date" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="intendedStayDuration" class="form-label">Intended Stay Duration (Days)</label>
+                            <input type="number" class="form-control" id="intendedStayDuration" 
+                                name="intended_stay_duration" readonly>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="remarks" class="form-label">Remarks</label>
+                            <textarea class="form-control" id="remarks" name="remarks" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="saveReservationBtn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

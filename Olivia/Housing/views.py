@@ -18,7 +18,7 @@ import logging
 
 # NOTE: Ensure these imports are correct based on your project structure
 from Olivia.constants import HOUSING_TABS
-from Housing.models import Unit, CompanyGroup, UserCompany, HousingUser
+from Housing.models import Unit, CompanyGroup, UserCompany, HousingUser, UnitAllocation, UnitAssignment, Reservation, CheckInCheckOut
 
 
 # =======================================================
@@ -503,8 +503,8 @@ def export_units(request):
 
     # 3. Define the function to extract data from a single Unit object (u)
     def row_data(u):
-        created_date_str = u.created_date.strftime("%Y-%m-%d %H:%M:%S") if u.created_date else ""
-        modified_date_str = u.modified_date.strftime("%Y-%m-%d %H:%M:%S") if u.modified_date else ""
+        created_date_str = u.created_date.strftime("%m/%d/%Y %H:%M:%S") if u.created_date else ""
+        modified_date_str = u.modified_date.strftime("%m/%d/%Y %H:%M:%S") if u.modified_date else ""
         return [
             u.unit_number,
             u.bed_number,
@@ -570,8 +570,8 @@ def create_company_api(request):
                 email_address=data.get('email_address'),
                 mobile=data.get('mobile'),
                 phone=data.get('phone'),
-                # ✅ AUDITING FIX: Set created_by on creation
-                created_by=auditing_user, 
+                created_by=request.user,
+                modified_by=request.user
             )
             
             # --- Prepare Response Data ---
@@ -615,7 +615,11 @@ def create_company_group_api(request):
             if not company_name:
                 return JsonResponse({'error': 'Name required.'}, status=400)
 
-            new_group = CompanyGroup.objects.create(company_name=company_name)
+            new_group = CompanyGroup.objects.create(
+                company_name=company_name,
+                created_by=request.user,
+                modified_by=request.user
+            )
 
             response_data = {'id': new_group.id, 'company_name': new_group.company_name}
             return JsonResponse(response_data, status=201)
@@ -635,19 +639,38 @@ def list_company_groups_api(request):
     return JsonResponse({'error': 'Only GET method allowed.'}, status=405)
 
 @csrf_exempt
-@require_http_methods(["PUT"])
+@require_http_methods(["GET", "PUT"])
 def company_update_view(request, pk):
     """
-    Handles PUT request to update an existing UserCompany record.
+    Handles GET request to fetch company details and PUT request to update an existing UserCompany record.
     """
     try:
         # 🔒 Authentication Check: Ensure user is logged in
         if not request.user.is_authenticated:
              return JsonResponse({"error": "Authentication required."}, status=403)
              
-        auditing_user = _get_auditing_user(request) # Get username
-        
         company = get_object_or_404(UserCompany, pk=pk)
+        
+        # Handle GET request - return company details
+        if request.method == 'GET':
+            response_data = {
+                'id': company.id,
+                'company_name': company.company_name,
+                'company_group_id': company.company_group.id if company.company_group else None,
+                'company_group_name': company.company_group.company_name if company.company_group else '-',
+                'cr_number': company.cr_number or '',
+                'vat_number': company.vat_number or '',
+                'contact_name': company.contact_name or '',
+                'email_address': company.email_address or '',
+                'mobile': company.mobile or '',
+                'phone': company.phone or '',
+                'company_details': company.company_details or '',
+                'address_text': company.address_text or '',
+            }
+            return JsonResponse(response_data)
+        
+        # Handle PUT request - update company
+        auditing_user = _get_auditing_user(request) # Get username
         data = json.loads(request.body)
 
         # 1. Update simple fields
@@ -747,8 +770,8 @@ def export_companies(request):
 
         def row_data(c):
             group_name = c.company_group.company_name if c.company_group else ""
-            created_date_str = c.created_date.strftime("%Y-%m-%d %H:%M") if c.created_date else ""
-            modified_date_str = c.modified_date.strftime("%Y-%m-%d %H:%M") if c.modified_date else ""
+            created_date_str = c.created_date.strftime("%m/%d/%Y %H:%M") if c.created_date else ""
+            modified_date_str = c.modified_date.strftime("%m/%d/%Y %H:%M") if c.modified_date else ""
 
             return [
                 c.company_name or "",
@@ -875,6 +898,8 @@ def create_user_api(request):
             nationality=data.get('nationality'),
             religion=data.get('religion'),
             status=data.get('status', 'Active'),
+            created_by=request.user,
+            modified_by=request.user,
         )
 
         response_data = {
@@ -925,6 +950,7 @@ def user_update_view(request, pk):
         user.nationality = nationality_name if nationality_name else None
         user.religion = data.get('religion', user.religion)
         user.status = data.get('status', user.status)
+        user.modified_by = request.user
 
         user.save()
 
@@ -1098,7 +1124,7 @@ def export_users(request):
                 u.government_id or "",
                 u.id_type or "",
                 u.neom_id or "",
-                u.dob.strftime("%Y-%m-%d") if u.dob else "",
+                u.dob.strftime("%m/%d/%Y") if u.dob else "",
                 u.mobile or "",
                 u.email or "",
                 u.nationality.name if u.nationality else "",
@@ -1118,4 +1144,1309 @@ def export_users(request):
     except Exception as e:
         print(f"Error during user export: {e}")
         return HttpResponse(f"An error occurred during export: {e}", status=500)
+
+
+# =======================================================
+# ALLOCATION VIEWS
+# =======================================================
+
+def allocation_list_view(request):
+    """List all unit allocations with pagination"""
+    query = request.GET.get('q', '')
+    allocations = UnitAllocation.objects.select_related('company_group', 'company').all()
+    
+    if query:
+        allocations = allocations.filter(
+            Q(uua_number__icontains=query) |
+            Q(company__company_name__icontains=query) |
+            Q(company_group__company_name__icontains=query)
+        )
+    
+    # Pagination
+    paginator = Paginator(allocations, 25)
+    page = request.GET.get('page', 1)
+    
+    try:
+        allocations_page = paginator.page(page)
+    except PageNotAnInteger:
+        allocations_page = paginator.page(1)
+    except EmptyPage:
+        allocations_page = paginator.page(paginator.num_pages)
+    
+    # Get company groups and companies for the modal
+    company_groups = CompanyGroup.objects.all()
+    companies = UserCompany.objects.select_related('company_group').all()
+    
+    context = {
+        'tabs': HOUSING_TABS,
+        'active_tab': 'allocation',
+        'allocations': allocations_page,
+        'company_groups': company_groups,
+        'companies': companies,
+        'query': query,
+    }
+    
+    return render(request, 'housing/allocation.html', context)
+
+
+@require_http_methods(["POST"])
+def allocation_create_view(request):
+    """Create a new unit allocation"""
+    try:
+        allocation_type = request.POST.get('allocation_type')
+        uua_number = request.POST.get('uua_number')
+        company_group_id = request.POST.get('company_group')
+        company_id = request.POST.get('company')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        a_rooms_beds = request.POST.get('a_rooms_beds', '')
+        b_rooms_beds = request.POST.get('b_rooms_beds', '')
+        c_rooms_beds = request.POST.get('c_rooms_beds', '')
+        d_rooms_beds = request.POST.get('d_rooms_beds', '')
+        allocation_status = request.POST.get('allocation_status', 'Active')
+        security_deposit = request.POST.get('security_deposit') or None
+        advance_payment = request.POST.get('advance_payment') or None
+        
+        # Create the allocation
+        allocation = UnitAllocation(
+            allocation_type=allocation_type,
+            uua_number=uua_number,
+            company_group_id=company_group_id,
+            company_id=company_id,
+            start_date=start_date,
+            end_date=end_date,
+            a_rooms_beds=a_rooms_beds,
+            b_rooms_beds=b_rooms_beds,
+            c_rooms_beds=c_rooms_beds,
+            d_rooms_beds=d_rooms_beds,
+            allocation_status=allocation_status,
+            security_deposit=security_deposit,
+            advance_payment=advance_payment,
+            created_by=request.user,
+            modified_by=request.user,
+        )
+        allocation.save()
+        
+        messages.success(request, f'Allocation {uua_number} created successfully!')
+        return JsonResponse({'success': True, 'message': 'Allocation created successfully'})
+        
+    except IntegrityError as e:
+        return JsonResponse({'success': False, 'error': 'UUA Number already exists'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["GET", "POST"])
+def allocation_update_view(request, pk):
+    """Update an existing unit allocation"""
+    allocation = get_object_or_404(UnitAllocation, pk=pk)
+    
+    if request.method == 'GET':
+        data = {
+            'id': allocation.id,
+            'allocation_type': allocation.allocation_type,
+            'uua_number': allocation.uua_number,
+            'company_group': allocation.company_group_id,
+            'company': allocation.company_id,
+            'start_date': allocation.start_date.strftime('%m/%d/%Y'),
+            'end_date': allocation.end_date.strftime('%m/%d/%Y'),
+            'a_rooms_beds': allocation.a_rooms_beds,
+            'b_rooms_beds': allocation.b_rooms_beds,
+            'c_rooms_beds': allocation.c_rooms_beds,
+            'd_rooms_beds': allocation.d_rooms_beds,
+            'allocation_status': allocation.allocation_status,
+            'security_deposit': str(allocation.security_deposit) if allocation.security_deposit else '',
+            'advance_payment': str(allocation.advance_payment) if allocation.advance_payment else '',
+        }
+        return JsonResponse(data)
+    
+    elif request.method == 'POST':
+        try:
+            allocation.allocation_type = request.POST.get('allocation_type')
+            allocation.uua_number = request.POST.get('uua_number')
+            allocation.company_group_id = request.POST.get('company_group')
+            allocation.company_id = request.POST.get('company')
+            allocation.start_date = request.POST.get('start_date')
+            allocation.end_date = request.POST.get('end_date')
+            allocation.a_rooms_beds = request.POST.get('a_rooms_beds', '')
+            allocation.b_rooms_beds = request.POST.get('b_rooms_beds', '')
+            allocation.c_rooms_beds = request.POST.get('c_rooms_beds', '')
+            allocation.d_rooms_beds = request.POST.get('d_rooms_beds', '')
+            allocation.allocation_status = request.POST.get('allocation_status', 'Active')
+            allocation.security_deposit = request.POST.get('security_deposit') or None
+            allocation.advance_payment = request.POST.get('advance_payment') or None
+            allocation.modified_by = request.user
+            
+            allocation.save()
+            
+            messages.success(request, f'Allocation {allocation.uua_number} updated successfully!')
+            return JsonResponse({'success': True, 'message': 'Allocation updated successfully'})
+            
+        except IntegrityError as e:
+            return JsonResponse({'success': False, 'error': 'UUA Number already exists'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["POST"])
+def allocation_delete_view(request):
+    """Delete a unit allocation"""
+    try:
+        allocation_id = request.POST.get('allocation_id')
+        allocation = get_object_or_404(UnitAllocation, pk=allocation_id)
+        uua_number = allocation.uua_number
+        allocation.delete()
+        
+        messages.success(request, f'Allocation {uua_number} deleted successfully!')
+        return JsonResponse({'success': True, 'message': 'Allocation deleted successfully'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def allocation_export_view(request):
+    """Export allocations to Excel"""
+    try:
+        query = request.GET.get('q', '')
+        queryset = UnitAllocation.objects.select_related('company_group', 'company', 'created_by', 'modified_by').all()
+        
+        if query:
+            queryset = queryset.filter(
+                Q(uua_number__icontains=query) |
+                Q(company__company_name__icontains=query) |
+                Q(company_group__company_name__icontains=query)
+            )
+        
+        headers = [
+            'UUA Number',
+            'Allocation Type',
+            'Company Group',
+            'Company',
+            'Start Date',
+            'End Date',
+            'A (Rooms/Beds)',
+            'B (Rooms/Beds)',
+            'C (Rooms/Beds)',
+            'D (Rooms/Beds)',
+            'Total (Rooms/Beds)',
+            'Allocation Status',
+            'Security Deposit',
+            'Advance Payment',
+            'Created By',
+            'Created Date',
+            'Modified By',
+            'Modified Date',
+        ]
+        
+        def row_data(a):
+            return [
+                a.uua_number or "",
+                a.allocation_type or "",
+                a.company_group.company_name if a.company_group else "",
+                a.company.company_name if a.company else "",
+                a.start_date.strftime("%m/%d/%Y") if a.start_date else "",
+                a.end_date.strftime("%m/%d/%Y") if a.end_date else "",
+                a.a_rooms_beds or "",
+                a.b_rooms_beds or "",
+                a.c_rooms_beds or "",
+                a.d_rooms_beds or "",
+                a.total_rooms_beds or "",
+                a.allocation_status or "",
+                str(a.security_deposit) if a.security_deposit else "",
+                str(a.advance_payment) if a.advance_payment else "",
+                a.created_by.username if a.created_by else "",
+                a.created_date.strftime("%m/%d/%Y %H:%M:%S") if a.created_date else "",
+                a.modified_by.username if a.modified_by else "",
+                a.modified_date.strftime("%m/%d/%Y %H:%M:%S") if a.modified_date else "",
+            ]
+        
+        return export_to_excel(
+            queryset,
+            headers,
+            row_data,
+            file_prefix="unit_allocations"
+        )
+        
+    except Exception as e:
+        print(f"Error during allocation export: {e}")
+        return HttpResponse(f"An error occurred during export: {e}", status=500)
+
+
+# =======================================================
+# ASSIGNMENT VIEWS
+# =======================================================
+
+def assignment_list_view(request):
+    """List all unit assignments with pagination"""
+    query = request.GET.get('q', '')
+    assignments = UnitAssignment.objects.select_related(
+        'allocation__company_group', 
+        'allocation__company', 
+        'unit'
+    ).all()
+    
+    if query:
+        assignments = assignments.filter(
+            Q(allocation__uua_number__icontains=query) |
+            Q(unit__unit_number__icontains=query) |
+            Q(accommodation_type__icontains=query)
+        )
+    
+    # Pagination
+    paginator = Paginator(assignments, 25)
+    page = request.GET.get('page', 1)
+    
+    try:
+        assignments_page = paginator.page(page)
+    except PageNotAnInteger:
+        assignments_page = paginator.page(1)
+    except EmptyPage:
+        assignments_page = paginator.page(paginator.num_pages)
+    
+    # Get only essential data for the modal - defer heavy queries
+    company_groups = CompanyGroup.objects.all()
+    # Only load companies and units when modal is opened, not on page load
+    companies = UserCompany.objects.select_related('company_group').only('id', 'company_name', 'company_group_id')
+    units = Unit.objects.filter(occupancy_status='Vacant Ready').only('id', 'unit_number', 'accomodation_type', 'zone', 'area', 'block', 'building', 'floor')
+    
+    context = {
+        'tabs': HOUSING_TABS,
+        'active_tab': 'assigning',
+        'assignments': assignments_page,
+        'company_groups': company_groups,
+        'companies': companies,
+        'units': units,
+        'query': query,
+    }
+    
+    return render(request, 'housing/assigning.html', context)
+
+
+@require_http_methods(["POST"])
+def assignment_create_view(request):
+    """Create a new unit assignment"""
+    try:
+        allocation_id = request.POST.get('allocationId')
+        unit_id = request.POST.get('unit')
+        accommodation_type = request.POST.get('accommodationType')
+        
+        if not allocation_id:
+            return JsonResponse({'success': False, 'error': 'Allocation is required'}, status=400)
+        
+        # Get the allocation
+        allocation = UnitAllocation.objects.get(id=allocation_id)
+        
+        # Check if the accommodation type is available in the allocation
+        available_beds = 0
+        field_name = f"{accommodation_type.lower()}_rooms_beds"
+        
+        if hasattr(allocation, field_name):
+            rooms_beds_value = getattr(allocation, field_name)
+            if rooms_beds_value:
+                # Parse "2/4" format to get number of beds (second number)
+                try:
+                    available_beds = int(rooms_beds_value.split('/')[1])
+                except:
+                    available_beds = 0
+        
+        if available_beds == 0:
+            return JsonResponse({
+                'success': False, 
+                'error': f'No {accommodation_type} type beds available in this allocation'
+            }, status=400)
+        
+        # Count existing assignments for this allocation and accommodation type
+        existing_count = UnitAssignment.objects.filter(
+            allocation_id=allocation_id,
+            accommodation_type=accommodation_type
+        ).count()
+        
+        if existing_count >= available_beds:
+            return JsonResponse({
+                'success': False, 
+                'error': f'All {accommodation_type} type beds ({available_beds}) have been assigned for this allocation'
+            }, status=400)
+        
+        # Create the assignment
+        assignment = UnitAssignment(
+            allocation_id=allocation_id,
+            unit_id=unit_id,
+            accommodation_type=accommodation_type,
+            created_by=request.user,
+            modified_by=request.user,
+        )
+        assignment.save()
+        
+        # Update unit occupancy_status to 'Assigned'
+        try:
+            unit = Unit.objects.get(id=unit_id)
+            unit.occupancy_status = 'Assigned'
+            unit.save()
+        except Unit.DoesNotExist:
+            pass
+        
+        # Check if all room types are fully assigned
+        def get_bed_count(alloc, room_type):
+            field = f"{room_type.lower()}_rooms_beds"
+            if hasattr(alloc, field):
+                value = getattr(alloc, field)
+                if value:
+                    try:
+                        return int(value.split('/')[1])  # Get beds (second number)
+                    except:
+                        return 0
+            return 0
+        
+        all_assigned = True
+        for room_type in ['A', 'B', 'C', 'D']:
+            required = get_bed_count(allocation, room_type)
+            if required > 0:
+                assigned = UnitAssignment.objects.filter(
+                    allocation_id=allocation_id,
+                    accommodation_type=room_type
+                ).count()
+                if assigned < required:
+                    all_assigned = False
+                    break
+        
+        # Update allocation remarks if all assigned
+        if all_assigned:
+            allocation.remarks = 'Done'
+            allocation.save()
+        
+        messages.success(request, 'Unit assignment created successfully!')
+        return JsonResponse({'success': True, 'message': 'Assignment created successfully'})
+        
+    except IntegrityError as e:
+        return JsonResponse({'success': False, 'error': 'This unit is already assigned to this allocation with this accommodation type'}, status=400)
+    except UnitAllocation.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Allocation not found'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["GET", "POST"])
+def assignment_update_view(request, pk):
+    """Update an existing unit assignment"""
+    assignment = get_object_or_404(UnitAssignment, pk=pk)
+    
+    if request.method == 'GET':
+        # Return data for populating the edit modal
+        allocation = assignment.allocation
+        unit = assignment.unit
+        
+        data = {
+            'id': assignment.id,
+            'allocation_id': allocation.id,
+            'company_group_id': allocation.company_group_id,
+            'company_id': allocation.company_id,
+            'allocation_type': allocation.allocation_type,
+            'uua_number': allocation.uua_number,
+            'start_date': allocation.start_date.strftime('%m/%d/%Y'),
+            'end_date': allocation.end_date.strftime('%m/%d/%Y'),
+            'unit_id': unit.id,
+            'accommodation_type': assignment.accommodation_type,
+            'zone': unit.zone if hasattr(unit, 'zone') else '',
+            'area': unit.area if hasattr(unit, 'area') else '',
+            'block': unit.block if hasattr(unit, 'block') else '',
+            'building': unit.building if hasattr(unit, 'building') else '',
+            'floor': unit.floor if hasattr(unit, 'floor') else '',
+        }
+        return JsonResponse(data)
+    
+    elif request.method == 'POST':
+        try:
+            allocation_id = request.POST.get('allocationId')  # Changed from 'allocation'
+            unit_id = request.POST.get('unit')
+            accommodation_type = request.POST.get('accommodationType')  # Changed from 'accommodation_type'
+            
+            if not allocation_id:
+                return JsonResponse({'success': False, 'error': 'Allocation is required'}, status=400)
+            
+            assignment.allocation_id = allocation_id
+            assignment.unit_id = unit_id
+            assignment.accommodation_type = accommodation_type
+            assignment.modified_by = request.user
+            
+            assignment.save()
+            
+            messages.success(request, 'Unit assignment updated successfully!')
+            return JsonResponse({'success': True, 'message': 'Assignment updated successfully'})
+            
+        except IntegrityError as e:
+            return JsonResponse({'success': False, 'error': 'This unit is already assigned to this allocation with this accommodation type'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["POST"])
+def assignment_delete_view(request):
+    """Delete a unit assignment"""
+    try:
+        assignment_id = request.POST.get('assignment_id')
+        assignment = get_object_or_404(UnitAssignment, pk=assignment_id)
+        
+        # Get the unit before deleting assignment
+        unit_id = assignment.unit_id
+        
+        assignment.delete()
+        
+        # Update unit occupancy_status back to 'Vacant Ready'
+        try:
+            unit = Unit.objects.get(id=unit_id)
+            unit.occupancy_status = 'Vacant Ready'
+            unit.save()
+        except Unit.DoesNotExist:
+            pass
+        
+        messages.success(request, 'Unit assignment deleted successfully!')
+        return JsonResponse({'success': True, 'message': 'Assignment deleted successfully'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def assignment_export_view(request):
+    """Export assignments to Excel"""
+    try:
+        query = request.GET.get('q', '')
+        queryset = UnitAssignment.objects.select_related(
+            'allocation', 'unit', 'allocation__company_group', 'allocation__company',
+            'created_by', 'modified_by'
+        ).all()
+        
+        if query:
+            queryset = queryset.filter(
+                Q(allocation__uua_number__icontains=query) |
+                Q(unit__unit_number__icontains=query) |
+                Q(accommodation_type__icontains=query)
+            )
+        
+        headers = [
+            'UUA Number',
+            'Allocation Type',
+            'Company Group',
+            'Company',
+            'Start Date',
+            'End Date',
+            'Unit Number',
+            'Accommodation Type',
+            'Zone',
+            'Area',
+            'Block',
+            'Building',
+            'Floor',
+            'Created By',
+            'Created Date',
+            'Modified By',
+            'Modified Date',
+        ]
+        
+        def row_data(a):
+            return [
+                a.allocation.uua_number if a.allocation else "",
+                a.allocation.allocation_type if a.allocation else "",
+                a.allocation.company_group.company_name if a.allocation and a.allocation.company_group else "",
+                a.allocation.company.company_name if a.allocation and a.allocation.company else "",
+                a.allocation.start_date.strftime("%m/%d/%Y") if a.allocation and a.allocation.start_date else "",
+                a.allocation.end_date.strftime("%m/%d/%Y") if a.allocation and a.allocation.end_date else "",
+                a.unit.unit_number if a.unit else "",
+                a.accommodation_type or "",
+                a.unit.zone if a.unit and hasattr(a.unit, 'zone') else "",
+                a.unit.area if a.unit and hasattr(a.unit, 'area') else "",
+                a.unit.block if a.unit and hasattr(a.unit, 'block') else "",
+                a.unit.building if a.unit and hasattr(a.unit, 'building') else "",
+                a.unit.floor if a.unit and hasattr(a.unit, 'floor') else "",
+                a.created_by.username if a.created_by else "",
+                a.created_date.strftime("%m/%d/%Y %H:%M:%S") if a.created_date else "",
+                a.modified_by.username if a.modified_by else "",
+                a.modified_date.strftime("%m/%d/%Y %H:%M:%S") if a.modified_date else "",
+            ]
+        
+        return export_to_excel(
+            queryset,
+            headers,
+            row_data,
+            file_prefix="unit_assignments"
+        )
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def get_allocations_by_company(request):
+    """Get all active allocations for a specific company"""
+    company_id = request.GET.get('company_id')
+    
+    if not company_id:
+        return JsonResponse({'error': 'No company_id provided'}, status=400)
+    
+    try:
+        allocations = UnitAllocation.objects.filter(
+            company_id=company_id,
+            allocation_status='Active'
+        ).select_related('company_group', 'company').order_by('-created_date')
+        
+        result = []
+        for allocation in allocations:
+            # Count existing assignments for each type
+            def get_available_count(alloc, room_type):
+                field = f"{room_type.lower()}_rooms_beds"
+                if hasattr(alloc, field):
+                    value = getattr(alloc, field)
+                    if value:
+                        try:
+                            total = int(value.split('/')[0])
+                            assigned = UnitAssignment.objects.filter(
+                                allocation_id=alloc.id,
+                                accommodation_type=room_type
+                            ).count()
+                            return f"{assigned}/{total}"
+                        except:
+                            return "0/0"
+                return "0/0"
+            
+            result.append({
+                'id': allocation.id,
+                'allocation_type': allocation.allocation_type,
+                'uua_number': allocation.uua_number,
+                'start_date': allocation.start_date.strftime('%m/%d/%Y'),
+                'end_date': allocation.end_date.strftime('%m/%d/%Y'),
+                'a_assigned': get_available_count(allocation, 'A'),
+                'b_assigned': get_available_count(allocation, 'B'),
+                'c_assigned': get_available_count(allocation, 'C'),
+                'd_assigned': get_available_count(allocation, 'D'),
+            })
+        
+        return JsonResponse(result, safe=False)
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+        
+    except Exception as e:
+        print(f"Error during assignment export: {e}")
+        return HttpResponse(f"An error occurred during export: {e}", status=500)
+
+
+@require_http_methods(["GET"])
+def get_allocation_by_company_group(request):
+    """API endpoint to get allocation details by company group"""
+    company_group_id = request.GET.get('company_group_id')
+    
+    if not company_group_id:
+        return JsonResponse({'error': 'Company group ID is required'}, status=400)
+    
+    try:
+        # Get the most recent active allocation for this company group
+        allocation = UnitAllocation.objects.filter(
+            company_group_id=company_group_id,
+            allocation_status='Active'
+        ).select_related('company_group', 'company').order_by('-created_date').first()
+        
+        if not allocation:
+            return JsonResponse({'error': 'No active allocation found for this company group'}, status=404)
+        
+        # Get available accommodation types from this allocation
+        available_types = []
+        if allocation.a_rooms_beds:
+            available_types.append('A')
+        if allocation.b_rooms_beds:
+            available_types.append('B')
+        if allocation.c_rooms_beds:
+            available_types.append('C')
+        if allocation.d_rooms_beds:
+            available_types.append('D')
+        
+        data = {
+            'allocation_id': allocation.id,
+            'allocation_type': allocation.allocation_type,
+            'uua_number': allocation.uua_number,
+            'company_id': allocation.company_id,
+            'company_name': allocation.company.company_name,
+            'start_date': allocation.start_date.strftime('%m/%d/%Y'),
+            'end_date': allocation.end_date.strftime('%m/%d/%Y'),
+            'available_accommodation_types': available_types,
+        }
+        
+        return JsonResponse(data)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# =======================================================
+# RESERVATION VIEWS
+# =======================================================
+
+def reservation_list_view(request):
+    """List all reservations with pagination"""
+    query = request.GET.get('q', '')
+    reservations = Reservation.objects.select_related(
+        'assignment', 'housing_user', 'assignment__allocation', 'assignment__unit'
+    ).all()
+    
+    if query:
+        reservations = reservations.filter(
+            Q(housing_user__username__icontains=query) |
+            Q(assignment__unit__unit_number__icontains=query) |
+            Q(assignment__allocation__uua_number__icontains=query)
+        )
+    
+    # Pagination
+    paginator = Paginator(reservations, 25)
+    page = request.GET.get('page', 1)
+    
+    try:
+        reservations_page = paginator.page(page)
+    except PageNotAnInteger:
+        reservations_page = paginator.page(1)
+    except EmptyPage:
+        reservations_page = paginator.page(paginator.num_pages)
+    
+    # Get data for the modal
+    # Get assignments where:
+    # 1. Unit has Assigned occupancy status
+    # 2. Unit does NOT have any active reservations with Reserved or Hold status
+    reserved_or_hold_unit_ids = Reservation.objects.filter(
+        occupancy_status__in=['Reserved', 'Hold']
+    ).values_list('unit_id', flat=True)
+    
+    assignments = UnitAssignment.objects.select_related(
+        'allocation', 'unit', 'allocation__company_group', 'allocation__company'
+    ).filter(
+        unit__occupancy_status='Assigned'
+    ).exclude(
+        unit_id__in=reserved_or_hold_unit_ids
+    )
+    
+    # Get unique housing users based on username (first occurrence of each unique username)
+    seen_usernames = set()
+    housing_users = []
+    for user in HousingUser.objects.select_related('group', 'company').order_by('username', 'id'):
+        if user.username not in seen_usernames:
+            seen_usernames.add(user.username)
+            housing_users.append(user)
+    
+    assigned_units = Unit.objects.filter(occupancy_status='Assigned').exclude(id__in=reserved_or_hold_unit_ids)
+    
+    context = {
+        'tabs': HOUSING_TABS,
+        'active_tab': 'reservation',
+        'reservations': reservations_page,
+        'assignments': assignments,
+        'housing_users': housing_users,
+        'assigned_units': assigned_units,
+        'query': query,
+    }
+    
+    return render(request, 'housing/reservation.html', context)
+
+
+@require_http_methods(["POST"])
+def reservation_create_view(request):
+    """Create a new reservation"""
+    try:
+        from datetime import datetime
+        
+        assignment_id = request.POST.get('assignment')
+        housing_user_id = request.POST.get('housing_user')
+        intended_checkin_date_str = request.POST.get('intended_checkin_date')
+        intended_checkout_date_str = request.POST.get('intended_checkout_date')
+        occupancy_status = request.POST.get('occupancy_status', 'Reserved')
+        remarks = request.POST.get('remarks', '')
+        
+        # Convert date strings to date objects
+        intended_checkin_date = datetime.strptime(intended_checkin_date_str, '%Y-%m-%d').date() if intended_checkin_date_str else None
+        intended_checkout_date = datetime.strptime(intended_checkout_date_str, '%Y-%m-%d').date() if intended_checkout_date_str else None
+        
+        # Get additional fields from form
+        allocation_type = request.POST.get('allocation_type', '')
+        uua_number = request.POST.get('uua_number', '')
+        company_group_id = request.POST.get('company_group')
+        company_id = request.POST.get('company')
+        start_date_str = request.POST.get('start_date')
+        end_date_str = request.POST.get('end_date')
+        accomodation_type = request.POST.get('accomodation_type', '')
+        unit_id = request.POST.get('unit')
+        unit_location_code = request.POST.get('unit_location_code', '')
+        
+        # Convert start and end dates
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else None
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else None
+        
+        # Get housing user fields
+        govt_id_number = request.POST.get('govt_id_number', '')
+        id_type = request.POST.get('id_type', '')
+        neom_id = request.POST.get('neom_id', '')
+        dob_str = request.POST.get('dob')
+        mobile_number = request.POST.get('mobile_number', '')
+        email = request.POST.get('email', '')
+        nationality = request.POST.get('nationality', '')
+        religion = request.POST.get('religion', '')
+        
+        # Convert dob
+        dob = datetime.strptime(dob_str, '%Y-%m-%d').date() if dob_str else None
+        # Convert dob
+        dob = datetime.strptime(dob_str, '%Y-%m-%d').date() if dob_str else None
+        
+        # Create the reservation
+        reservation = Reservation(
+            assignment_id=assignment_id,
+            housing_user_id=housing_user_id,
+            intended_checkin_date=intended_checkin_date,
+            intended_checkout_date=intended_checkout_date,
+            occupancy_status=occupancy_status,
+            remarks=remarks,
+            allocation_type=allocation_type,
+            uua_number=uua_number,
+            company_group_id=company_group_id if company_group_id else None,
+            company_id=company_id if company_id else None,
+            start_date=start_date,
+            end_date=end_date,
+            accomodation_type=accomodation_type,
+            unit_id=unit_id if unit_id else None,
+            unit_location_code=unit_location_code,
+            govt_id_number=govt_id_number,
+            id_type=id_type,
+            neom_id=neom_id,
+            dob=dob,
+            mobile_number=mobile_number,
+            email=email,
+            nationality=nationality,
+            religion=religion,
+            created_by=request.user,
+            modified_by=request.user,
+        )
+        reservation.save()
+        
+        # Update unit occupancy status to match reservation status (Reserved or Hold)
+        if unit_id:
+            unit = Unit.objects.get(id=unit_id)
+            # Set unit status to Reserved or Hold based on reservation occupancy status
+            if occupancy_status in ['Reserved', 'Hold']:
+                unit.occupancy_status = occupancy_status
+                unit.save()
+        
+        messages.success(request, 'Reservation created successfully!')
+        return JsonResponse({'success': True, 'message': 'Reservation created successfully'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["GET", "POST"])
+def reservation_update_view(request, pk):
+    """Update an existing reservation"""
+    reservation = get_object_or_404(Reservation, pk=pk)
+    
+    if request.method == 'GET':
+        data = {
+            'id': reservation.id,
+            'assignment': reservation.assignment_id,
+            'housing_user': reservation.housing_user_id,
+            'intended_checkin_date': reservation.intended_checkin_date.strftime('%m/%d/%Y'),
+            'intended_checkout_date': reservation.intended_checkout_date.strftime('%m/%d/%Y'),
+            'intended_stay_duration': reservation.intended_stay_duration,
+            'occupancy_status': reservation.occupancy_status,
+            'remarks': reservation.remarks,
+            # Assignment fields
+            'allocation_type': reservation.allocation_type,
+            'uua_number': reservation.uua_number,
+            'company_group': reservation.company_group_id,
+            'company_group_name': reservation.company_group.company_name if reservation.company_group else '',
+            'company': reservation.company_id,
+            'company_name': reservation.company.company_name if reservation.company else '',
+            'start_date': reservation.start_date.strftime('%m/%d/%Y') if reservation.start_date else '',
+            'end_date': reservation.end_date.strftime('%m/%d/%Y') if reservation.end_date else '',
+            'accomodation_type': reservation.accomodation_type,
+            'unit': reservation.unit_id,
+            'unit_location_code': reservation.unit_location_code,
+            # Housing user fields
+            'govt_id_number': reservation.govt_id_number,
+            'id_type': reservation.id_type,
+            'neom_id': reservation.neom_id,
+            'dob': reservation.dob.strftime('%m/%d/%Y') if reservation.dob else '',
+            'mobile_number': reservation.mobile_number,
+            'email': reservation.email,
+            'nationality': str(reservation.nationality) if reservation.nationality else '',
+            'religion': reservation.religion,
+        }
+        return JsonResponse(data)
+    
+    elif request.method == 'POST':
+        try:
+            from datetime import datetime
+            
+            reservation.assignment_id = request.POST.get('assignment')
+            reservation.housing_user_id = request.POST.get('housing_user')
+            
+            # Convert date strings to date objects
+            intended_checkin_date_str = request.POST.get('intended_checkin_date')
+            intended_checkout_date_str = request.POST.get('intended_checkout_date')
+            reservation.intended_checkin_date = datetime.strptime(intended_checkin_date_str, '%Y-%m-%d').date() if intended_checkin_date_str else None
+            reservation.intended_checkout_date = datetime.strptime(intended_checkout_date_str, '%Y-%m-%d').date() if intended_checkout_date_str else None
+            
+            # Update assignment fields
+            reservation.allocation_type = request.POST.get('allocation_type', '')
+            reservation.uua_number = request.POST.get('uua_number', '')
+            company_group_id = request.POST.get('company_group')
+            company_id = request.POST.get('company')
+            reservation.company_group_id = company_group_id if company_group_id else None
+            reservation.company_id = company_id if company_id else None
+            
+            start_date_str = request.POST.get('start_date')
+            end_date_str = request.POST.get('end_date')
+            reservation.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else None
+            reservation.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else None
+            
+            reservation.accomodation_type = request.POST.get('accomodation_type', '')
+            unit_id = request.POST.get('unit')
+            reservation.unit_id = unit_id if unit_id else None
+            reservation.unit_location_code = request.POST.get('unit_location_code', '')
+            
+            # Update housing user fields
+            reservation.govt_id_number = request.POST.get('govt_id_number', '')
+            reservation.id_type = request.POST.get('id_type', '')
+            reservation.neom_id = request.POST.get('neom_id', '')
+            dob_str = request.POST.get('dob')
+            reservation.dob = datetime.strptime(dob_str, '%Y-%m-%d').date() if dob_str else None
+            reservation.mobile_number = request.POST.get('mobile_number', '')
+            reservation.email = request.POST.get('email', '')
+            reservation.nationality = request.POST.get('nationality', '')
+            reservation.religion = request.POST.get('religion', '')
+            
+            reservation.occupancy_status = request.POST.get('occupancy_status', 'Reserved')
+            reservation.remarks = request.POST.get('remarks', '')
+            reservation.modified_by = request.user
+            
+            reservation.save()
+            
+            # Update unit occupancy status to match reservation status (Reserved or Hold)
+            if reservation.unit:
+                if reservation.occupancy_status in ['Reserved', 'Hold']:
+                    reservation.unit.occupancy_status = reservation.occupancy_status
+                    reservation.unit.save()
+            
+            messages.success(request, 'Reservation updated successfully!')
+            return JsonResponse({'success': True, 'message': 'Reservation updated successfully'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["POST"])
+def reservation_delete_view(request):
+    """Delete a reservation"""
+    try:
+        reservation_id = request.POST.get('reservation_id')
+        reservation = get_object_or_404(Reservation, pk=reservation_id)
+        
+        # Revert unit status back to Vacant Ready when reservation is deleted
+        if reservation.unit:
+            reservation.unit.occupancy_status = 'Vacant Ready'
+            reservation.unit.save()
+        
+        reservation.delete()
+        
+        messages.success(request, 'Reservation deleted successfully!')
+        return JsonResponse({'success': True, 'message': 'Reservation deleted successfully'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def reservation_export_view(request):
+    """Export reservations to Excel"""
+    try:
+        query = request.GET.get('q', '')
+        queryset = Reservation.objects.select_related(
+            'assignment', 'housing_user', 'assignment__allocation', 'assignment__unit',
+            'created_by', 'modified_by'
+        ).all()
+        
+        if query:
+            queryset = queryset.filter(
+                Q(housing_user__username__icontains=query) |
+                Q(assignment__unit__unit_number__icontains=query) |
+                Q(assignment__allocation__uua_number__icontains=query)
+            )
+        
+        headers = [
+            'Allocation Type',
+            'UUA Number',
+            'Company Group',
+            'Company',
+            'Start Date',
+            'End Date',
+            'Accommodation Type',
+            'Unit Number',
+            'Unit Location Code',
+            'User Name',
+            'Govt ID Number',
+            'ID Type',
+            'NEOM ID',
+            'D.O.B',
+            'Mobile Number',
+            'Email',
+            'Nationality',
+            'Religion',
+            'Occupancy Status',
+            'Intended Check-In Date',
+            'Intended Check-Out Date',
+            'Intended Stay Duration (Days)',
+            'Created By',
+            'Created Date',
+            'Modified By',
+            'Modified Date',
+        ]
+        
+        def row_data(r):
+            return [
+                r.allocation_type or "",
+                r.uua_number or "",
+                r.company_group.company_name if r.company_group else "",
+                r.company.company_name if r.company else "",
+                r.start_date.strftime("%m/%d/%Y") if r.start_date else "",
+                r.end_date.strftime("%m/%d/%Y") if r.end_date else "",
+                r.accomodation_type or "",
+                r.unit.unit_number if r.unit else "",
+                r.unit_location_code or "",
+                r.housing_user.username if r.housing_user else "",
+                r.govt_id_number or "",
+                r.id_type or "",
+                r.neom_id or "",
+                r.dob.strftime("%m/%d/%Y") if r.dob else (r.housing_user.dob.strftime("%m/%d/%Y") if r.housing_user and r.housing_user.dob else ""),
+                r.mobile_number or "",
+                r.email or "",
+                r.nationality.name if r.nationality else "",
+                r.religion or "",
+                r.occupancy_status or "",
+                r.intended_checkin_date.strftime("%m/%d/%Y") if r.intended_checkin_date else "",
+                r.intended_checkout_date.strftime("%m/%d/%Y") if r.intended_checkout_date else "",
+                str(r.intended_stay_duration) if r.intended_stay_duration else "",
+                r.created_by.username if r.created_by else "",
+                r.created_date.strftime("%m/%d/%Y %H:%M:%S") if r.created_date else "",
+                r.modified_by.username if r.modified_by else "",
+                r.modified_date.strftime("%m/%d/%Y %H:%M:%S") if r.modified_date else "",
+            ]
+        
+        return export_to_excel(
+            queryset,
+            headers,
+            row_data,
+            file_prefix="reservations"
+        )
+        
+    except Exception as e:
+        print(f"Error during reservation export: {e}")
+        return HttpResponse(f"An error occurred during export: {e}", status=500)
+
+
+# =======================================================
+# CHECK-IN/CHECK-OUT VIEWS
+# =======================================================
+
+def checkin_checkout_list_view(request):
+    """List all check-ins/check-outs with pagination"""
+    query = request.GET.get('q', '')
+    checkins = CheckInCheckOut.objects.select_related(
+        'reservation', 'reservation__housing_user', 'reservation__assignment__unit'
+    ).all()
+    
+    if query:
+        checkins = checkins.filter(
+            Q(reservation__housing_user__username__icontains=query) |
+            Q(reservation__assignment__unit__unit_number__icontains=query)
+        )
+    
+    # Pagination
+    paginator = Paginator(checkins, 25)
+    page = request.GET.get('page', 1)
+    
+    try:
+        checkins_page = paginator.page(page)
+    except PageNotAnInteger:
+        checkins_page = paginator.page(1)
+    except EmptyPage:
+        checkins_page = paginator.page(paginator.num_pages)
+    
+    # Get data for the modal - include all related fields
+    reservations = Reservation.objects.select_related(
+        'housing_user', 
+        'assignment__unit',
+        'assignment__allocation',
+        'assignment__allocation__company',
+        'assignment__allocation__company_group',
+        'unit',
+        'company',
+        'company_group'
+    ).filter(occupancy_status__in=['Reserved', 'Assigned'])
+    
+    context = {
+        'tabs': HOUSING_TABS,
+        'active_tab': 'checkin_checkout',
+        'checkins': checkins_page,
+        'reservations': reservations,
+        'query': query,
+    }
+    
+    return render(request, 'housing/checkin_checkout.html', context)
+
+
+@require_http_methods(["POST"])
+def checkin_checkout_create_view(request):
+    """Create a new check-in/check-out record"""
+    try:
+        from datetime import datetime
+        
+        print("POST data:", dict(request.POST))
+        print("User:", request.user, "Is authenticated:", request.user.is_authenticated)
+        
+        # Extract only the fields we need
+        reservation_id = request.POST.get('reservation')
+        actual_checkin_datetime_str = request.POST.get('actual_checkin_datetime') or None
+        actual_checkout_datetime_str = request.POST.get('actual_checkout_datetime') or None
+        remarks = request.POST.get('remarks', '')
+        
+        if not reservation_id:
+            return JsonResponse({'success': False, 'error': 'Reservation is required'}, status=400)
+        
+        # Convert string datetime to datetime object
+        actual_checkin_datetime = None
+        actual_checkout_datetime = None
+        
+        if actual_checkin_datetime_str:
+            actual_checkin_datetime = datetime.strptime(actual_checkin_datetime_str, '%Y-%m-%dT%H:%M')
+            
+        if actual_checkout_datetime_str:
+            actual_checkout_datetime = datetime.strptime(actual_checkout_datetime_str, '%Y-%m-%dT%H:%M')
+        
+        # Create the check-in/check-out record with only the fields we specify
+        checkin = CheckInCheckOut(
+            reservation_id=reservation_id,
+            actual_checkin_datetime=actual_checkin_datetime,
+            actual_checkout_datetime=actual_checkout_datetime,
+            remarks=remarks,
+        )
+        # Set audit fields explicitly
+        checkin.created_by = request.user
+        checkin.modified_by = request.user
+        checkin.save()
+        
+        # Update reservation and unit status
+        reservation = Reservation.objects.get(pk=reservation_id)
+        if actual_checkin_datetime and not actual_checkout_datetime:
+            reservation.occupancy_status = 'Occupied'
+            reservation.save()
+            # Update unit status to Occupied
+            if reservation.unit:
+                reservation.unit.occupancy_status = 'Occupied'
+                reservation.unit.save()
+        elif actual_checkout_datetime:
+            reservation.occupancy_status = 'Checked Out'
+            reservation.save()
+            # Update unit status to Vacant Dirty
+            if reservation.unit:
+                reservation.unit.occupancy_status = 'Vacant Dirty'
+                reservation.unit.save()
+        
+        messages.success(request, 'Check-in/check-out record created successfully!')
+        return JsonResponse({'success': True, 'message': 'Check-in/check-out created successfully'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["GET", "POST"])
+def checkin_checkout_update_view(request, pk):
+    """Update an existing check-in/check-out record"""
+    checkin = get_object_or_404(CheckInCheckOut, pk=pk)
+    
+    if request.method == 'GET':
+        # Get the reservation with all related data
+        res = checkin.reservation
+        
+        data = {
+            'id': checkin.id,
+            'reservation': checkin.reservation_id,
+            'reservation_username': res.housing_user.username,
+            'actual_checkin_datetime': checkin.actual_checkin_datetime.strftime('%Y-%m-%dT%H:%M') if checkin.actual_checkin_datetime else '',
+            'actual_checkout_datetime': checkin.actual_checkout_datetime.strftime('%Y-%m-%dT%H:%M') if checkin.actual_checkout_datetime else '',
+            'actual_stay_duration': checkin.actual_stay_duration,
+            'remarks': checkin.remarks or '',
+            # Add all reservation details for auto-population
+            'allocation_type': res.allocation_type or '',
+            'uua_number': res.uua_number or '',
+            'allocation_code': res.unit_location_code or '',
+            'company_group': res.company_group.company_name if res.company_group else '',
+            'company': res.company.company_name if res.company else '',
+            'start_date': res.start_date.strftime('%m/%d/%Y') if res.start_date else '',
+            'end_date': res.end_date.strftime('%m/%d/%Y') if res.end_date else '',
+            'accomodation_type': res.accomodation_type or '',
+            'unit': res.unit.unit_number if res.unit else '',
+            'unit_location': res.unit_location_code or '',
+            'govt_id': res.govt_id_number or '',
+            'id_type': res.id_type or '',
+            'neom_id': res.neom_id or '',
+            'dob': res.dob.strftime('%m/%d/%Y') if res.dob else (res.housing_user.dob.strftime('%m/%d/%Y') if res.housing_user.dob else ''),
+            'mobile': res.mobile_number or '',
+            'email': res.email or '',
+            'nationality': res.nationality.name if res.nationality else '',
+            'religion': res.religion or '',
+            'occupancy_status': res.occupancy_status or '',
+        }
+        return JsonResponse(data)
+    
+    elif request.method == 'POST':
+        try:
+            from datetime import datetime
+            
+            checkin.reservation_id = request.POST.get('reservation')
+            actual_checkin_datetime = request.POST.get('actual_checkin_datetime') or None
+            actual_checkout_datetime = request.POST.get('actual_checkout_datetime') or None
+            remarks = request.POST.get('remarks', '')
+            
+            # Convert string datetime to datetime object
+            if actual_checkin_datetime:
+                checkin.actual_checkin_datetime = datetime.strptime(actual_checkin_datetime, '%Y-%m-%dT%H:%M')
+            else:
+                checkin.actual_checkin_datetime = None
+                
+            if actual_checkout_datetime:
+                checkin.actual_checkout_datetime = datetime.strptime(actual_checkout_datetime, '%Y-%m-%dT%H:%M')
+            else:
+                checkin.actual_checkout_datetime = None
+            
+            checkin.remarks = remarks
+            checkin.modified_by = request.user
+            
+            checkin.save()
+            
+            # Update reservation and unit status
+            reservation = checkin.reservation
+            if actual_checkin_datetime and not actual_checkout_datetime:
+                reservation.occupancy_status = 'Occupied'
+                reservation.save()
+                # Update unit status to Occupied
+                if reservation.unit:
+                    reservation.unit.occupancy_status = 'Occupied'
+                    reservation.unit.save()
+            elif actual_checkout_datetime:
+                reservation.occupancy_status = 'Checked Out'
+                reservation.save()
+                # Update unit status to Vacant Dirty
+                if reservation.unit:
+                    reservation.unit.occupancy_status = 'Vacant Dirty'
+                    reservation.unit.save()
+            
+            messages.success(request, 'Check-in/check-out record updated successfully!')
+            return JsonResponse({'success': True, 'message': 'Check-in/check-out updated successfully'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(["POST"])
+def checkin_checkout_delete_view(request):
+    """Delete a check-in/check-out record"""
+    try:
+        checkin_id = request.POST.get('checkin_id')
+        checkin = get_object_or_404(CheckInCheckOut, pk=checkin_id)
+        checkin.delete()
+        
+        messages.success(request, 'Check-in/check-out record deleted successfully!')
+        return JsonResponse({'success': True, 'message': 'Check-in/check-out deleted successfully'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def checkin_checkout_export_view(request):
+    """Export check-ins/check-outs to Excel"""
+    try:
+        query = request.GET.get('q', '')
+        queryset = CheckInCheckOut.objects.select_related(
+            'reservation', 'reservation__housing_user', 'reservation__assignment__unit',
+            'reservation__assignment__allocation', 'created_by', 'modified_by'
+        ).all()
+        
+        if query:
+            queryset = queryset.filter(
+                Q(reservation__housing_user__username__icontains=query) |
+                Q(reservation__assignment__unit__unit_number__icontains=query)
+            )
+        
+        headers = [
+            'Allocation Type',
+            'UUA Number',
+            'Allocation Code',
+            'Company Group',
+            'Company',
+            'Start Date',
+            'End Date',
+            'Accommodation Type',
+            'Unit Number',
+            'Unit Location Code',
+            'Govt ID Number',
+            'ID Type',
+            'NEOM ID',
+            'D.O.B',
+            'Mobile Number',
+            'Email',
+            'Nationality',
+            'Religion',
+            'Occupancy Status',
+            'Actual Check-In Date & Time',
+            'Actual Check-Out Date & Time',
+            'Actual Stay Duration (Days)',
+            'Remarks',
+            'Created By',
+            'Created Date',
+            'Modified By',
+            'Modified Date',
+        ]
+        
+        def row_data(c):
+            res = c.reservation
+            return [
+                res.allocation_type or "",
+                res.uua_number or "",
+                res.unit_location_code or "",
+                res.company_group.company_name if res and res.company_group else "",
+                res.company.company_name if res and res.company else "",
+                res.start_date.strftime("%m/%d/%Y") if res and res.start_date else "",
+                res.end_date.strftime("%m/%d/%Y") if res and res.end_date else "",
+                res.accomodation_type or "",
+                res.unit.unit_number if res and res.unit else "",
+                res.unit_location_code or "",
+                res.govt_id_number or "",
+                res.id_type or "",
+                res.neom_id or "",
+                res.dob.strftime("%m/%d/%Y") if res and res.dob else (res.housing_user.dob.strftime("%m/%d/%Y") if res and res.housing_user and res.housing_user.dob else ""),
+                res.mobile_number or "",
+                res.email or "",
+                res.nationality.name if res and res.nationality else "",
+                res.religion or "",
+                res.occupancy_status or "",
+                c.actual_checkin_datetime.strftime("%m/%d/%Y %H:%M:%S") if c.actual_checkin_datetime else "",
+                c.actual_checkout_datetime.strftime("%m/%d/%Y %H:%M:%S") if c.actual_checkout_datetime else "",
+                str(c.actual_stay_duration) if c.actual_stay_duration else "",
+                c.remarks or "",
+                c.created_by.username if c.created_by else "",
+                c.created_date.strftime("%m/%d/%Y %H:%M:%S") if c.created_date else "",
+                c.modified_by.username if c.modified_by else "",
+                c.modified_date.strftime("%m/%d/%Y %H:%M:%S") if c.modified_date else "",
+            ]
+        
+        return export_to_excel(
+            queryset,
+            headers,
+            row_data,
+            file_prefix="checkins_checkouts"
+        )
+        
+    except Exception as e:
+        print(f"Error during check-in/check-out export: {e}")
+        return HttpResponse(f"An error occurred during export: {e}", status=500)
+
+
 

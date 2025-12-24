@@ -1,5 +1,5 @@
 from django import forms
-from .models import Cash, Employee
+from .models import Cash, Employee, Manager
 from django_countries.widgets import CountrySelectWidget
 import datetime
 
@@ -7,7 +7,7 @@ class CashForm(forms.ModelForm):
     class Meta:
         model = Cash
         fields = '__all__'
-        exclude = ('submitted_date', 'total',) # Exclude these fields to prevent form validation errors
+        exclude = ('submitted_date', 'total', 'created_by', 'modified_by', 'created_at', 'modified_at') # Exclude audit and auto fields
         widgets = {
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'supplier_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -43,7 +43,7 @@ class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = '__all__'
-        exclude = ('documents',)  # Keep documents excluded; include photo so uploads are handled by the form
+        exclude = ('documents', 'created_by', 'modified_by', 'created_at', 'modified_at')  # Exclude audit fields - set automatically by backend
         widgets = {
             'staffid': forms.TextInput(attrs={'class': 'form-control'}),
             'full_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -51,7 +51,7 @@ class EmployeeForm(forms.ModelForm):
             'department': forms.TextInput(attrs={'class': 'form-control'}),
             'manager': forms.Select(attrs={'class': 'form-select'}),
             'nationality': CountrySelectWidget(attrs={'class': 'form-select'}),
-            'photo_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'photo_url': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'iqama_number': forms.TextInput(attrs={'class': 'form-control'}),
@@ -59,7 +59,6 @@ class EmployeeForm(forms.ModelForm):
             'gender': forms.Select(attrs={'class': 'form-select'}),
             'location': forms.TextInput(attrs={'class': 'form-control'}),
             'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'photo_url': forms.URLInput(attrs={'class': 'form-control'}),
             'employment_status': forms.Select(attrs={'class': 'form-select'}),
         }
 
@@ -69,4 +68,12 @@ class EmployeeForm(forms.ModelForm):
         self.fields['staffid'].required = True
         self.fields['full_name'].required = True
         self.fields['department'].required = True
+        # Manager from Manager table, ordered by name, optional
+        if 'manager' in self.fields:
+            self.fields['manager'].queryset = Manager.objects.all().order_by('name')
+            self.fields['manager'].required = False
+            try:
+                self.fields['manager'].empty_label = 'Select Manager'
+            except Exception:
+                pass
 
