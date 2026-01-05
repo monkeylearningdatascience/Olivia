@@ -1,0 +1,77 @@
+{% extends "warehouse/home.html" %}
+{% load static %}
+
+{% block title %}Inventory - Warehouse{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'warehouse/css/warehouse.css' %}">
+{% endblock %}
+
+{% block warehouse_content %}
+<div class="card warehouse-card mt-4">
+  <div class="card-header warehouse-card-header">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <h5 class="mb-0 fw-bold">
+        <i class="fas fa-boxes text-primary me-2"></i>
+        Inventory
+      </h5>
+      <div class="d-flex align-items-center gap-2">
+        <div class="search-box">
+          <input placeholder="Search..." id="searchInventory" class="form-control shadow-none" type="search">
+        </div>
+        <select class="form-select shadow-none border-0" id="categoryFilter" style="width: 150px;">
+          <option value="">All Categories</option>
+        </select>
+        <select class="form-select shadow-none border-0" id="locationFilter" style="width: 150px;">
+          <option value="">All Locations</option>
+        </select>
+      </div>
+      <div class="btn-group btn-group-sm align-items-center">
+        <button class="btn btn-sm btn-outline-success" id="addNewInventoryBtn" data-bs-toggle="modal" data-bs-target="#inventoryModal">
+          <i class="fas fa-plus-circle me-1"></i> Create
+        </button>
+        
+        <button class="btn btn-sm btn-outline-primary" id="updateInventoryBtn">
+          <i class="fas fa-edit me-1"></i> Update
+        </button>
+        
+        <button class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
+          <i class="fas fa-trash me-1"></i> Delete
+        </button>
+        
+        <!-- <button class="btn btn-sm btn-outline-info" id="importBtn" data-bs-toggle="modal" data-bs-target="#importInventoryModal">
+          <i class="fas fa-upload me-1"></i> Import
+        </button> -->
+        
+        <button class="btn btn-sm btn-outline-secondary" id="exportBtn">
+          <i class="fas fa-download me-1"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body px-4 py-3">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle table-hover mb-0" style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+        <thead class="table-light text-muted">
+          <tr>
+            <th>Product Code</th>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Current Stock</th>
+            <th>Unit</th>
+            <th>Reorder Level</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryTableBody">
+          <tr>
+            <td colspan="9" class="text-center text-muted">No inventory items found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

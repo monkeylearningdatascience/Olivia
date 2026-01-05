@@ -1,0 +1,70 @@
+{% extends "warehouse/home.html" %}
+{% load static %}
+
+{% block title %}Closing Stock - Warehouse{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'warehouse/css/warehouse.css' %}">
+{% endblock %}
+
+{% block warehouse_content %}
+<div class="card warehouse-card mt-4">
+  <div class="card-header warehouse-card-header">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <h5 class="mb-0 fw-bold">
+        <i class="fas fa-calendar-check text-primary me-2"></i>
+        Closing Stock
+      </h5>
+      <div class="search-box mx-3">
+        <input placeholder="Search..." id="searchClosingStock" class="form-control shadow-none" type="search">
+      </div>
+      
+      <div class="btn-group btn-group-sm align-items-center">
+        <button class="btn btn-sm btn-outline-success" id="addNewClosingStockBtn" data-bs-toggle="modal" data-bs-target="#closingStockModal">
+          <i class="fas fa-plus-circle me-1"></i> Create
+        </button>
+        
+        <button class="btn btn-sm btn-outline-primary" id="updateClosingStockBtn">
+          <i class="fas fa-edit me-1"></i> Update
+        </button>
+        
+        <button class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
+          <i class="fas fa-trash me-1"></i> Delete
+        </button>
+        
+        <!-- <button class="btn btn-sm btn-outline-info" id="importBtn" data-bs-toggle="modal" data-bs-target="#importClosingStockModal">
+          <i class="fas fa-upload me-1"></i> Import
+        </button> -->
+        
+        <button class="btn btn-sm btn-outline-secondary" id="exportBtn">
+          <i class="fas fa-download me-1"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body warehouse-card-body">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle table-hover mb-0 warehouse-table">
+        <thead class="table-light text-muted">
+          <tr>
+            <th>Item Code</th>
+            <th>Item Description</th>
+            <th>UOM</th>
+            <th>Quantity</th>
+            <th>Min Inventory</th>
+            <th>Max Capacity</th>
+            <th>PO Quantity</th>
+            <th>Category</th>
+            <th>Storage Location</th>
+          </tr>
+        </thead>
+        <tbody id="closingStockTableBody">
+          <tr>
+            <td colspan="9" class="text-center text-muted">No closing stock records found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

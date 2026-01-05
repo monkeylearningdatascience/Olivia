@@ -15,11 +15,11 @@ class ApprovalAuthority(models.Model):
     Maps approval authority to specific combinations.
     """
     APPROVAL_LEVEL_CHOICES = [
-        (1, 'Level 1 - Direct Manager'),
-        (2, 'Level 2 - Department Head'),
-        (3, 'Level 3 - Operations Manager'),
-        (4, 'Level 4 - Project Manager'),
-        (5, 'Level 5 - Final Authority'),
+        (1, 'Level 1 - Supervisor'),
+        (2, 'Level 2 - Officer / Engineer'),
+        (3, 'Level 3 - Manager'),
+        (4, 'Level 4 - Operations Manager'),
+        (5, 'Level 5 - Project Manager'),
     ]
     
     APP_CHOICES = [

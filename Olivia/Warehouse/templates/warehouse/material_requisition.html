@@ -1,0 +1,100 @@
+{% extends "warehouse/home.html" %}
+{% load static %}
+
+{% block title %}Material Requisition - Warehouse{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'warehouse/css/warehouse.css' %}">
+{% endblock %}
+
+{% block warehouse_content %}
+<div class="card warehouse-card mt-4">
+  <div class="card-header warehouse-card-header">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <h5 class="mb-0 fw-bold">
+        <i class="fas fa-file-alt text-primary me-2"></i>
+        Material Requisition
+      </h5>
+      <div class="d-flex align-items-center gap-2">
+        <div class="search-box">
+          <input placeholder="Search..." id="searchRequisition" class="form-control shadow-none" type="search">
+        </div>
+        <select class="form-select shadow-none border-0" id="statusFilter" style="width: 150px;">
+          <option value="">All Status</option>
+          <option value="PENDING">Pending</option>
+          <option value="APPROVED">Approved</option>
+          <option value="ISSUED">Issued</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+      </div>
+      <div class="btn-group btn-group-sm align-items-center">
+        <button class="btn btn-sm btn-outline-success" id="addNewRequisitionBtn" data-bs-toggle="modal" data-bs-target="#requisitionModal">
+          <i class="fas fa-plus-circle me-1"></i> Create
+        </button>
+        
+        <button class="btn btn-sm btn-outline-primary" id="updateRequisitionBtn">
+          <i class="fas fa-edit me-1"></i> Update
+        </button>
+        
+        <button class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
+          <i class="fas fa-trash me-1"></i> Delete
+        </button>
+        
+        <!-- <button class="btn btn-sm btn-outline-info" id="importBtn" data-bs-toggle="modal" data-bs-target="#importRequisitionModal">
+          <i class="fas fa-upload me-1"></i> Import
+        </button> -->
+        
+        <button class="btn btn-sm btn-outline-secondary" id="exportBtn">
+          <i class="fas fa-download me-1"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body px-4 py-3">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle table-hover mb-0" style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+        <thead class="table-light text-muted">
+          <tr>
+            <th>Date</th>
+            <th>Department</th>
+            <th>Requested By</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="requisitionTableBody">
+          <tr>
+            <td colspan="6" class="text-center text-muted">No requisition records found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div>
+        <span id="pageInfo" class="text-muted">No records</span>
+      </div>
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-secondary" id="prevPage">
+          <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <button class="btn btn-outline-secondary" disabled>
+          Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+        </button>
+        <button class="btn btn-outline-secondary" id="nextPage">
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Modals -->
+{% include 'warehouse/includes/requisition_modal.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'warehouse/js/material_requisition.js' %}"></script>
+{% endblock %}

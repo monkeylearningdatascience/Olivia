@@ -1,0 +1,127 @@
+/* Warehouse App Styles */
+
+/* Card Styles */
+.warehouse-card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 0;
+    border-radius: 0.5rem;
+}
+
+.warehouse-card-header {
+    background-color: #ffffff;
+    border: 0;
+    padding: 1rem 1.5rem;
+}
+
+.warehouse-card-body {
+    padding: 1rem 1.5rem;
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+    max-width: 300px;
+}
+
+.search-box input {
+    padding-left: 2.5rem;
+    border-radius: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.search-box input:focus {
+    box-shadow: none;
+    border-color: #0d6efd;
+}
+
+/* Table Styles */
+.warehouse-table {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+}
+
+.warehouse-table thead {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+/* Horizontal Rule */
+hr.no-margin-hr {
+    margin: 0 !important;
+    opacity: 0.1;
+}
+
+/* Remove margin from all hr elements in warehouse */
+.warehouse-card > hr {
+    margin: 0 !important;
+    opacity: 0.1;
+}
+
+.card > hr.no-margin-hr {
+    margin: 0 !important;
+    opacity: 0.1;
+}
+
+/* Filter Styles */
+.warehouse-filter {
+    border: 0;
+    box-shadow: none;
+}
+
+/* Button Styles */
+.btn-warehouse-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #ffffff;
+}
+
+.btn-warehouse-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Stats Card */
+.stat-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+/* Label Generator Specific Styles */
+.label-preview-area {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .search-box {
+        max-width: 100%;
+    }
+    
+    .warehouse-card-header .d-flex {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}

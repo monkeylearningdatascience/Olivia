@@ -21,7 +21,7 @@ HR_TABS = [
 # Example: Departments (you already had this in views.py earlier)
 DEPARTMENTS = [
     {'name': 'HumanResource', 'url': '/humanresource/', 'icon': 'fa-solid fa-user'},
-    {'name': 'Housing', 'url': '/housing/', 'icon': 'fa-solid fa-home'},
+    # {'name': 'Housing', 'url': '/housing/', 'icon': 'fa-solid fa-home'},  # Hidden - can be enabled in future
     {'name': 'Hard Service', 'url': '/hardservice/', 'icon': 'fa-solid fa-screwdriver-wrench'},
     {'name': 'Soft Service', 'url': '/softservice/', 'icon': 'fa-solid fa-broom'},
     {'name': 'Utility', 'url': '/utility/', 'icon': 'fa-solid fa-bolt'},
@@ -31,7 +31,7 @@ DEPARTMENTS = [
     {'name': 'Warehouse', 'url': '/warehouse/', 'icon': 'fa-solid fa-box'},
     {'name': 'QHSE', 'url': '/qhse/', 'icon': 'fa-solid fa-shield-halved'},
     {'name': 'ICT', 'url': '/ict/', 'icon': 'fa-solid fa-computer'},
-    {'name': 'Tickets', 'url': '/tickets/', 'icon': 'fa-solid fa-ticket'},
+    # {'name': 'Tickets', 'url': '/tickets/', 'icon': 'fa-solid fa-ticket'},  # Hidden - can be enabled in future
     {'name': 'Training', 'url': '/training/', 'icon': 'fa-solid fa-chalkboard-teacher'},
 ]
 
@@ -57,6 +57,18 @@ LOGISTICS_TABS = [
     {"name": "Service Details", "url_name": "logistics_service_details"},
     {"name": "Vehicle Transfer", "url_name": "logistics_vehicle_transfer"},
     ]
+
+WAREHOUSE_TABS = [
+    {"name": "Receiving", "url_name": "receiving"},
+    {"name": "Dispatch", "url_name": "dispatch"},
+    {"name": "Closing Stock", "url_name": "closing_stock"},
+    {"name": "Inventory", "url_name": "inventory"},
+    {"name": "Stock Movement", "url_name": "stock_movement"},
+    {"name": "Stock Adjustment", "url_name": "stock_adjustment"},
+    {"name": "Stock Alert", "url_name": "stock_alert"},
+    {"name": "Material Requisition", "url_name": "material_requisition"},
+    {"name": "Label Generator", "url_name": "label_generator"},
+]
 
 QHSE_TABS = [
     {"name": "Policies", "url_name": "policies"},

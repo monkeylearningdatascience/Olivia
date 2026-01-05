@@ -1,0 +1,199 @@
+/* Warehouse App Styles */
+
+/* Card Styles */
+.warehouse-card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 0;
+    border-radius: 0.5rem;
+}
+
+.warehouse-card-header {
+    background-color: #ffffff;
+    border: 0;
+    padding: 1rem 1.5rem;
+}
+
+.warehouse-card-body {
+    padding: 1rem 1.5rem;
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+    max-width: 300px;
+}
+
+.search-box input {
+    padding-left: 2.5rem;
+    border-radius: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.search-box input:focus {
+    box-shadow: none;
+    border-color: #0d6efd;
+}
+
+/* Table Styles */
+.warehouse-table {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+}
+
+.warehouse-table thead {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+/* Horizontal Rule */
+hr.no-margin-hr {
+    margin: 0 !important;
+    opacity: 0.1;
+}
+
+/* Remove margin from all hr elements in warehouse */
+.warehouse-card > hr {
+    margin: 0 !important;
+    opacity: 0.1;
+}
+
+.card > hr.no-margin-hr {
+    margin: 0 !important;
+    opacity: 0.1;
+}
+
+/* Filter Styles */
+.warehouse-filter {
+    border: 0;
+    box-shadow: none;
+}
+
+/* Button Styles */
+.btn-warehouse-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #ffffff;
+}
+
+.btn-warehouse-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Stats Card */
+.stat-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+/* Label Generator Specific Styles */
+.label-preview-area {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .search-box {
+        max-width: 100%;
+    }
+    
+    .warehouse-card-header .d-flex {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Compact Modal Styling - Global for all modals in project */
+.modal-body {
+    padding: 0.75rem 1rem !important;
+}
+
+.modal-header {
+    padding: 0.6rem 1rem !important;
+}
+
+.modal-footer {
+    padding: 0.6rem 1rem !important;
+}
+
+.modal-title {
+    font-size: 1rem !important;
+}
+
+.modal-body .form-label {
+    margin-bottom: 0.2rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+    height: calc(1.5rem + 2px);
+}
+
+.modal-body .form-control-sm,
+.modal-body .form-select-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+    height: calc(1.4rem + 2px);
+}
+
+.modal-body textarea.form-control,
+.modal-body textarea.form-control-sm {
+    padding: 0.25rem 0.5rem;
+    height: auto !important;
+    min-height: 2rem;
+}
+
+.modal-body .row {
+    margin-bottom: 0;
+}
+
+.modal-body h6 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.modal-body hr {
+    margin: 0.5rem 0;
+}
+
+.modal-body .btn-sm {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Items list table in modal */
+.modal-body .table-sm {
+    font-size: 0.75rem;
+}
+
+.modal-body .table-sm th,
+.modal-body .table-sm td {
+    padding: 0.25rem;
+}

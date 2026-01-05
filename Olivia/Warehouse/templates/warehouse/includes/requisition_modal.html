@@ -1,0 +1,65 @@
+<!-- Material Requisition Modal -->
+<div class="modal fade" id="requisitionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="requisitionModalLabel">Create Material Requisition</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="requisitionForm" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+        {% csrf_token %}
+        <div class="modal-body" style="overflow-y: auto; flex: 1;">
+          <!-- Item Details -->
+          <div class="card mb-2 shadow-sm">
+            <div class="card-header bg-light py-1 px-2">
+              <strong><i class="fas fa-box me-1"></i>Item Details</strong>
+            </div>
+            <div class="card-body py-2 px-2">
+              <div class="row g-1">
+                <div class="col-md-4">
+                  <label for="productSelect" class="form-label mb-0 small">Product *</label>
+                  <select class="form-select form-select-sm" id="productSelect">
+                    <option value="">Select Product</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label for="requestedQuantity" class="form-label mb-0 small">Requested Qty *</label>
+                  <input type="number" class="form-control form-control-sm" id="requestedQuantity">
+                </div>
+                <div class="col-md-2">
+                  <label for="issuedQuantity" class="form-label mb-0 small">Issued Qty</label>
+                  <input type="number" class="form-control form-control-sm" id="issuedQuantity" value="0">
+                </div>
+                <div class="col-md-3">
+                  <label for="itemRemarks" class="form-label mb-0 small">Item Remarks</label>
+                  <input type="text" class="form-control form-control-sm" id="itemRemarks">
+                </div>
+                <div class="col-md-1 d-flex align-items-end" id="addItemBtnContainer">
+                  <button type="button" class="btn btn-success btn-sm w-100" id="addItemBtn" style="height: 31px;">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items List -->
+          <div class="card shadow-sm" id="itemsListCard">
+            <div class="card-header bg-light py-1 px-2">
+              <strong><i class="fas fa-list me-1"></i>Items to Request</strong>
+            </div>
+            <div class="card-body py-2 px-2" style="max-height: 150px; overflow-y: auto;">
+              <div id="itemsList">
+                <p class="text-muted text-center">No items added yet</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Save Requisition</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

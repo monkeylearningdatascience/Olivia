@@ -1,0 +1,199 @@
+<!-- Receiving Modal (Create/Update) -->
+<div class="modal fade" id="receivingModal" tabindex="-1" aria-labelledby="receivingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white" id="receivingModalLabel">Add New Receiving</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <form id="receivingForm" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+                {% csrf_token %}
+                <div class="modal-body" style="overflow-y: auto; flex: 1;">
+                    <input type="hidden" id="receivingId" name="id" value="">
+
+                    <!-- Receiving Header Information -->
+                    <div class="card mb-2 shadow-sm">
+                        <div class="card-header bg-light py-1 px-2">
+                            <strong><i class="fas fa-info-circle me-1"></i>Receiving Information</strong>
+                        </div>
+                        <div class="card-body py-2 px-2">
+                            <div class="row g-1">
+                        <div class="col-md-2">
+                            <label for="receiveDate" class="form-label mb-0 small">Receive Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control form-control-sm" id="receiveDate" name="date" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="prNumber" class="form-label mb-0 small">PR No.</label>
+                            <input type="text" class="form-control form-control-sm" id="prNumber" name="pr_number">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="poNumber" class="form-label mb-0 small">PO No.</label>
+                            <input type="text" class="form-control form-control-sm" id="poNumber" name="po_number">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="poDate" class="form-label mb-0 small">PO Date</label>
+                            <input type="date" class="form-control form-control-sm" id="poDate" name="po_date">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="grnNumber" class="form-label mb-0 small">GRN No. <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="grnNumber" name="grn_number" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="invoiceNumber" class="form-label mb-0 small">Invoice No.</label>
+                            <input type="text" class="form-control form-control-sm" id="invoiceNumber" name="invoice_number">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="supplier" class="form-label mb-0 small">Supplier <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="supplier" name="supplier" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="purchaseType" class="form-label mb-0 small">Purchase Type <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" id="purchaseType" name="purchase_type" required>
+                                <option value="LOCAL">Local Purchase</option>
+                                <option value="HQ">Head Quarters</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="department" class="form-label mb-0 small">Department</label>
+                            <select class="form-select form-select-sm" id="department" name="department">
+                                <option value="">Select Department</option>
+                                <option value="Soft Service">Soft Service</option>
+                                <option value="Hard Service">Hard Service</option>
+                                <option value="ICT">ICT</option>
+                                <option value="FLS">FLS</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label mb-0 small">Status</label>
+                            <select class="form-select form-select-sm" id="status" name="status">
+                                <option value="PENDING">Pending</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="remarks" class="form-label mb-0 small">Remarks</label>
+                            <textarea class="form-control form-control-sm" id="remarks" name="remarks" rows="1"></textarea>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+
+                    <!-- Item Details Section -->
+                    <div class="card mb-2 shadow-sm" id="itemDetailsCard">
+                        <div class="card-header bg-light py-1 px-2">
+                            <strong><i class="fas fa-box me-1"></i>Item Details</strong>
+                        </div>
+                        <div class="card-body py-2 px-2">
+                            <div class="row g-1">
+                        <div class="col-md-3">
+                            <label for="category" class="form-label mb-0 small">Category</label>
+                            <input type="text" class="form-control form-control-sm" id="category" name="category">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="itemCode" class="form-label mb-0 small">Item Code</label>
+                            <input type="text" class="form-control form-control-sm" id="itemCode" name="item_code">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="modelNumber" class="form-label mb-0 small">Model Number</label>
+                            <input type="text" class="form-control form-control-sm" id="modelNumber" name="model_number">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="serialNumber" class="form-label mb-0 small">Serial Number</label>
+                            <input type="text" class="form-control form-control-sm" id="serialNumber" name="serial_number">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="countryOfOrigin" class="form-label mb-0 small">Country of Origin</label>
+                            <select class="form-select form-select-sm" id="countryOfOrigin" name="country_of_origin">
+                                <option value="">-- Select Country --</option>
+                                {% for country in countries %}
+                                <option value="{{ country.code }}">{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="uom" class="form-label mb-0 small">UOM <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="uom" name="uom" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="quantity" class="form-label mb-0 small">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="quantity" name="quantity" step="0.01" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="unitPrice" class="form-label mb-0 small">Unit Price <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="unitPrice" name="unit_price" step="0.01" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="vat" class="form-label mb-0 small">VAT %</label>
+                            <input type="number" class="form-control form-control-sm" id="vat" name="vat_percentage" step="0.01" value="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="productionDate" class="form-label mb-0 small">Production Date</label>
+                            <input type="date" class="form-control form-control-sm" id="productionDate" name="production_date">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="expiryDate" class="form-label mb-0 small">Expiry Date</label>
+                            <input type="date" class="form-control form-control-sm" id="expiryDate" name="expiry_date">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="itemDescription" class="form-label mb-0 small">Item Description</label>
+                            <textarea class="form-control form-control-sm" id="itemDescription" name="item_description" rows="1"></textarea>
+                        </div>
+                        <div class="col-md-12 text-end" id="addItemBtnContainer">
+                            <button type="button" class="btn btn-success btn-sm" id="addItemBtn">
+                                <i class="fas fa-plus me-1"></i> Add Item
+                            </button>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+
+                    <!-- Items List -->
+                    <div class="card shadow-sm" id="itemsListCard">
+                        <div class="card-header bg-light py-1 px-2">
+                            <strong><i class="fas fa-list me-1"></i>Items to be Saved</strong>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
+                                        <tr>
+                                            <th style="width: 40px;">#</th>
+                                            <th>Category</th>
+                                            <th>Item Code</th>
+                                            <th>Description</th>
+                                            <th>Model No</th>
+                                            <th>Serial No</th>
+                                            <th>UOM</th>
+                                            <th>Qty</th>
+                                            <th>Unit Price</th>
+                                            <th>VAT%</th>
+                                            <th>Total</th>
+                                            <th style="width: 60px;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsListBody">
+                                        <tr>
+                                            <td colspan="12" class="text-center text-muted">No items added yet</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="flex-shrink: 0; border-top: 2px solid #dee2e6;">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="saveAllItemsBtn">
+                        <i class="fas fa-save me-1"></i> Save All Items
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" id="updateSingleItemBtn" style="display: none;">
+                        <i class="fas fa-save me-1"></i> Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

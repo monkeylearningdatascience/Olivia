@@ -1,0 +1,78 @@
+{% extends "warehouse/home.html" %}
+{% load static %}
+
+{% block title %}Stock Movement - Warehouse{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'warehouse/css/warehouse.css' %}">
+{% endblock %}
+
+{% block warehouse_content %}
+<div class="card warehouse-card mt-4">
+  <div class="card-header warehouse-card-header">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <h5 class="mb-0 fw-bold">
+        <i class="fas fa-exchange-alt text-primary me-2"></i>
+        Stock Movement
+      </h5>
+      <div class="d-flex align-items-center gap-2">
+        <div class="search-box" style="max-width: 180px;">
+          <input placeholder="Search..." id="searchMovement" class="form-control shadow-none" type="search">
+        </div>
+        <input type="date" class="form-control shadow-none border-0" id="dateFrom" style="width: 130px;">
+        <input type="date" class="form-control shadow-none border-0" id="dateTo" style="width: 130px;">
+        <select class="form-select shadow-none border-0" id="movementTypeFilter" style="width: 110px;">
+          <option value="">All Types</option>
+          <option value="IN">IN</option>
+          <option value="OUT">OUT</option>
+          <option value="TRANSFER">TRANSFER</option>
+        </select>
+      </div>
+      <div class="btn-group btn-group-sm align-items-center">
+        <button class="btn btn-sm btn-outline-success" id="addNewMovementBtn" data-bs-toggle="modal" data-bs-target="#movementModal">
+          <i class="fas fa-plus-circle me-1"></i> Create
+        </button>
+        
+        <button class="btn btn-sm btn-outline-primary" id="updateMovementBtn">
+          <i class="fas fa-edit me-1"></i> Update
+        </button>
+        
+        <button class="btn btn-sm btn-outline-danger" id="deleteSelectedBtn">
+          <i class="fas fa-trash me-1"></i> Delete
+        </button>
+        
+        <!-- <button class="btn btn-sm btn-outline-info" id="importBtn" data-bs-toggle="modal" data-bs-target="#importMovementModal">
+          <i class="fas fa-upload me-1"></i> Import
+        </button> -->
+        
+        <button class="btn btn-sm btn-outline-secondary" id="exportBtn">
+          <i class="fas fa-download me-1"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body px-4 py-3">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle table-hover mb-0" style="font-family: 'Poppins', sans-serif; font-size: 0.9rem;">
+        <thead class="table-light text-muted">
+          <tr>
+            <th>Date</th>
+            <th>Reference No.</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>From Location</th>
+            <th>To Location</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="movementTableBody">
+          <tr>
+            <td colspan="8" class="text-center text-muted">No stock movement records found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
